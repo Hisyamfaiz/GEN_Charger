@@ -16,7 +16,7 @@ extern float Current_Charger;
 float 	SetPoint_CC;
 float	CC_Value = 0.33*Battery_Capacity;
 
-
+//test git2
 void Constant_Current()
 {
 	if(Batt_SOC.m_uint16t <= 15)
