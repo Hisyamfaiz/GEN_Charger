@@ -116,7 +116,8 @@ uint8_t		Flag_ChargerOverVoltage,
 			Flag_ChargerOverTemperature,
 			Flag_ChargerUnderTemperature,
 			Flag_ChargerShortCircuit,
-			Flag_ChargerOverCurrent;
+			Flag_ChargerOverCurrent,
+			Flag_ChargerLostCommunication;
 
 uint8_t 	flag_trip_overtemperature,
 			flag_trip_undertemperature,
@@ -135,7 +136,9 @@ uint8_t 	flag_trip_overtemperature,
 
 uint8_t		charge_state,
 			discharge_state,
-			sleep_state;
+			sleep_state,
+			Communication_Flag,
+			Handshaking;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

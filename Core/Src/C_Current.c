@@ -227,7 +227,8 @@ void Constant_Current()
 		Flag_ChargerShortCircuit == 1	||
 		Flag_ChargerOverCurrent == 1	||
 		Flag_ChargerOverTemperature == 1||
-		Flag_ChargerOverVoltage == 1	)
+		Flag_ChargerOverVoltage == 1	||
+		Flag_ChargerLostCommunication==1)
 		{
 			duty=0;
 			Charger_Mode = 2;

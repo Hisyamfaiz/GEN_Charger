@@ -29,7 +29,7 @@ extern CAN_RxHeaderTypeDef 	Rx_Header;
 uint8_t		Tx_data[8];
 uint32_t	TxMailbox;
 uint8_t		Rx_data[8];
-uint8_t		Handshaking=0, identified=0;
+uint8_t		identified=0;
 
 /* USER CODE END 0 */
 
@@ -146,7 +146,7 @@ void CAN_Setting(void)
 	Tx_Header.RTR = CAN_RTR_DATA;
 	Tx_Header.IDE = CAN_ID_STD;
 
-//	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 }
 
 void CAN_Tx_Process(void)
@@ -163,11 +163,19 @@ void CAN_Tx_Process(void)
 
 void CAN_Rx_Process(void)
 {
-	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
-		HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
+if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
+	HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
+	Communication_Flag = 1;
+}
 
 		if(Handshaking==0){
-			// CAN ID receive (Handshaking)
+			if(identified == 0){
+				Tx_Header.StdId = 0x1B2;
+				Tx_data[0] = 0x01;
+				Tx_Header.DLC = 8;
+				if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+			}
+		// CAN ID receive (Handshaking)
 			if(Rx_Header.ExtId>>20==0x0E0){
 				if(Rx_data[6]==0x55 && identified==0){
 					Tx_Header.StdId = 0x0E2;
@@ -237,8 +245,8 @@ void CAN_Rx_Process(void)
 			flag_trip_overcurrentcharge = (Rx_data[6]>>2)&0x01;
 			flag_trip_overtemperature = (Rx_data[6]>>3)&0x01;
 			flag_trip_undertemperature = (Rx_data[6]>>4)&0x01;
-//			flag_trip_overtemperature = (Rx_data[6]>>5)&0x01;
-//			flag_trip_undertemperature = (Rx_data[6]>>6)&0x01;
+	//			flag_trip_overtemperature = (Rx_data[6]>>5)&0x01;
+	//			flag_trip_undertemperature = (Rx_data[6]>>6)&0x01;
 			flag_trip_unbalance = (Rx_data[6]>>7)&0x01;
 
 			flag_trip_undervoltage = Rx_data[7]&0x01;
@@ -297,14 +305,12 @@ void CAN_Rx_Process(void)
 		}
 		}
 		// ******************************End Cell  Voltage Data Send**************************************
-	}
+
 }
 
 //void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-//	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
-//			HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 //	}
-//}
+
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

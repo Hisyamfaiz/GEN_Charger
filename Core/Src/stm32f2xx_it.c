@@ -72,7 +72,7 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 /* USER CODE BEGIN EV */
 
-uint8_t		i, Temp_delay_calc, L=0;
+uint8_t		i, Temp_delay_calc, L=0, SS=0;
 uint16_t	Tbuzz=999;
 float		OFFSET_CurrentSense;
 float		TripTime_OverCurrent,
@@ -259,7 +259,7 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
 
-//	CAN_Rx_Process();	//can receive handle
+	CAN_Rx_Process();	//can receive handle
 
 	// *********************** Sensing Process (ADC average) ******************************
 
@@ -400,7 +400,13 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-//	CAN_Tx_Process();
+	CAN_Tx_Process();
+	SS+=1;
+	if(SS >= 30 && Handshaking ==1){
+		if(Communication_Flag == 1) Communication_Flag = 0;
+		else Flag_ChargerLostCommunication = 1;
+		SS = 0;
+	}
 
 
   /* USER CODE END TIM3_IRQn 0 */
@@ -416,7 +422,7 @@ void TIM3_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-	CAN_Rx_Process();	//can receive handle
+//	CAN_Rx_Process();	//can receive handle
 
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
@@ -515,6 +521,8 @@ void Eror_CodeCheck(void)
 
 	else if (Flag_ChargerOverVoltage==1)
 		Eror_Code=18;	//Charger Over Current
+	else if(Flag_ChargerLostCommunication==1)
+		Eror_Code=19;
 //	else
 //		Eror_Code=0;
 }
@@ -531,6 +539,7 @@ void Clear_ProtectionFlag(void)
 	Flag_ChargerOverCurrent = 0;
 	Flag_ChargerOverTemperature = 0;
 	Flag_ChargerOverVoltage = 0;
+	Flag_ChargerLostCommunication = 0;
 }
 
 void Fault_Check(void)
