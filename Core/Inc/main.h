@@ -139,6 +139,15 @@ uint8_t		charge_state,
 			sleep_state,
 			Communication_Flag,
 			Handshaking;
+
+float 		BP_Voltage,
+			BP_Capacity,
+			BP_Current,
+			BP_Cycle,
+			BP_Temp,
+			BP_SOC,
+			BP_SOH;
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

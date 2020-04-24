@@ -167,11 +167,17 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 	HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 	Communication_Flag = 1;
 }
-
 		if(Handshaking==0){
 			if(identified == 0){
 				Tx_Header.StdId = 0x1B2;
-				Tx_data[0] = 0x01;
+				Tx_data[0] = 0;
+				Tx_data[1] = 0;
+				Tx_data[2] = 0;
+				Tx_data[3] = 0;
+				Tx_data[4] = 0;
+				Tx_data[5] = 0;
+				Tx_data[6] = 0;
+				Tx_data[7] = 0x01;
 				Tx_Header.DLC = 8;
 				if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 			}
@@ -221,24 +227,24 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 		if(Handshaking==1){
 		// CAN ID receive #1 (0x7b1)
 		if(Rx_Header.ExtId == (0x0B0<<20|UNIQUE_Code)){
-			Batt_voltage.m_bytes[1] = Rx_data[0];
-			Batt_voltage.m_bytes[0] = Rx_data[1];
-			Batt_current.m_bytes[1] = Rx_data[2];
-			Batt_current.m_bytes[0] = Rx_data[3];
-			Batt_SOC.m_bytes[1] = Rx_data[4];
-			Batt_SOC.m_bytes[0] = Rx_data[5];
-			Batt_temp.m_bytes[1] = Rx_data[6];
-			Batt_temp.m_bytes[0] = Rx_data[7];
+			Batt_voltage.m_bytes[0] = Rx_data[0];
+			Batt_voltage.m_bytes[1] = Rx_data[1];
+			Batt_current.m_bytes[0] = Rx_data[2];
+			Batt_current.m_bytes[1] = Rx_data[3];
+			Batt_SOC.m_bytes[0] = Rx_data[4];
+			Batt_SOC.m_bytes[1] = Rx_data[5];
+			Batt_temp.m_bytes[0] = Rx_data[6];
+			Batt_temp.m_bytes[1] = Rx_data[7];
 		}
 
 		// CAN ID receive #2 (0x7b2)
 		if(Rx_Header.ExtId == (0x0B1<<20|UNIQUE_Code)){
-			Batt_capacity.m_bytes[1] = Rx_data[0];
-			Batt_capacity.m_bytes[0] = Rx_data[1];
-			Batt_SOH.m_bytes[1] = Rx_data[2];
-			Batt_SOH.m_bytes[0] = Rx_data[3];
-			Batt_cycle.m_bytes[1] = Rx_data[4];
-			Batt_cycle.m_bytes[0] = Rx_data[5];
+			Batt_capacity.m_bytes[0] = Rx_data[0];
+			Batt_capacity.m_bytes[1] = Rx_data[1];
+			Batt_SOH.m_bytes[0] = Rx_data[2];
+			Batt_SOH.m_bytes[1] = Rx_data[3];
+			Batt_cycle.m_bytes[0] = Rx_data[4];
+			Batt_cycle.m_bytes[1] = Rx_data[5];
 
 			flag_trip_shortcircuit = Rx_data[6]&0x01;
 			flag_trip_overcurrentdischarge = (Rx_data[6]>>1)&0x01;
@@ -305,6 +311,13 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 		}
 		}
 		// ******************************End Cell  Voltage Data Send**************************************
+		BP_Voltage = Batt_voltage.m_uint16t/100;
+		BP_Current = (Batt_current.m_uint16t/100)-50;
+		BP_Temp = (Batt_temp.m_uint16t/10)-40;
+		BP_SOC = Batt_SOC.m_uint16t;
+		BP_Capacity = Batt_capacity.m_uint16t/100;
+		BP_SOH = Batt_SOH.m_uint16t;
+//		BP_Cycle = Batt_cycle.m_uint16;
 
 }
 

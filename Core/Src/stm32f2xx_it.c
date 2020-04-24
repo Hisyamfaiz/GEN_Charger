@@ -400,7 +400,7 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-	CAN_Tx_Process();
+//	CAN_Tx_Process();
 	SS+=1;
 	if(SS >= 30 && Handshaking ==1){
 		if(Communication_Flag == 1) Communication_Flag = 0;
