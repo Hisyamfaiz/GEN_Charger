@@ -259,7 +259,7 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
 
-	CAN_Rx_Process();	//can receive handle
+//	CAN_Rx_Process();	//can receive handle
 
 	// *********************** Sensing Process (ADC average) ******************************
 

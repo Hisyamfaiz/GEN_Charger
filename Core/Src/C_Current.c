@@ -20,7 +20,7 @@ float	CC_Value = 0.33*Battery_Capacity;
 void Constant_Current()
 {
 	if(Batt_SOC.m_uint16t <= 15)
-		SetPoint_CC = 0.05*CC_Value;
+		SetPoint_CC = 0.5*CC_Value;
 	else {
 		if(flag_Derating==1)
 			SetPoint_CC = 0.5*CC_Value;
