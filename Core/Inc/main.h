@@ -58,8 +58,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define Buzzer_Pin GPIO_PIN_15
-#define Buzzer_GPIO_Port GPIOC
 #define Led1_Pin GPIO_PIN_14
 #define Led1_GPIO_Port GPIOB
 #define Led2_Pin GPIO_PIN_15
@@ -68,6 +66,8 @@ void Error_Handler(void);
 #define Led3_GPIO_Port GPIOC
 #define Button2_Pin GPIO_PIN_7
 #define Button2_GPIO_Port GPIOC
+#define Buzzer_Pin GPIO_PIN_8
+#define Buzzer_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
 
 void CHARGER_ON_Init(void);
@@ -75,27 +75,39 @@ void Display_StanbyMode(void);
 void Display_ChargeMode(void);
 void Display_ProtectionMode(void);
 
-uint16_t 	ADC_value[5];
-uint16_t 	ADC_current;
-uint16_t 	ADC_voltagen;
-uint16_t 	ADC_voltagep;
+uint16_t 	ADC_value[8];
+uint16_t 	ADC_Iin;
+uint16_t 	ADC_VinN;
+uint16_t 	ADC_VinP;
+uint16_t 	ADC_Iout;
+uint16_t 	ADC_VoutN;
+uint16_t 	ADC_VoutP;
 uint16_t 	ADC_temp1;
 uint16_t 	ADC_temp2;
 uint8_t		Eror_Code,
 			LastEror_code;
 uint32_t	UNIQUE_Code;
 
-int			ADC_SUM_I,
-			ADC_SUM_Vn,
-			ADC_SUM_Vp;
+int			ADC_SUM_Iin,
+			ADC_SUM_VinN,
+			ADC_SUM_VinP,
+			ADC_SUM_Iout,
+			ADC_SUM_VoutN,
+			ADC_SUM_VoutP;
 
-uint16_t	ADC_Array_I[100],
-			ADC_Array_Vn[100],
-			ADC_Array_Vp[100];
+uint16_t	ADC_Array_Iin[100],
+			ADC_Array_VinN[100],
+			ADC_Array_VinP[100],
+			ADC_Array_Iout[100],
+			ADC_Array_VoutN[100],
+			ADC_Array_VoutP[100];
 
-float		ADC_Average_I,
-			ADC_Average_Vn,
-			ADC_Average_Vp,
+float		ADC_Average_Iin,
+			ADC_Average_VinN,
+			ADC_Average_VinP,
+			ADC_Average_Iout,
+			ADC_Average_VoutN,
+			ADC_Average_VoutP,
 			Current_Charger,
 			OFFSET_Calibration,
 			OFFSET_CurrentSense,

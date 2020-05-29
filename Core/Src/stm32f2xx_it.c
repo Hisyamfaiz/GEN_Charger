@@ -259,37 +259,49 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
 
-//	CAN_Rx_Process();	//can receive handle
+	CAN_Rx_Process();	//can receive handle
 
 	// *********************** Sensing Process (ADC average) ******************************
 
-	ADC_SUM_I = ADC_SUM_I - ADC_Array_I[i];		//delete old data
-	ADC_SUM_Vn = ADC_SUM_Vn - ADC_Array_Vn[i];
-	ADC_SUM_Vp = ADC_SUM_Vp - ADC_Array_Vp[i];
+	ADC_SUM_Iin = ADC_SUM_Iin - ADC_Array_Iin[i];		//delete old data
+	ADC_SUM_VinN = ADC_SUM_VinN - ADC_Array_VinN[i];
+	ADC_SUM_VinP = ADC_SUM_VinP - ADC_Array_VinP[i];
+	ADC_SUM_Iout = ADC_SUM_Iout - ADC_Array_Iout[i];
+	ADC_SUM_VoutN = ADC_SUM_VoutN - ADC_Array_VoutN[i];
+	ADC_SUM_VoutP = ADC_SUM_VoutP - ADC_Array_VoutP[i];
 
-	ADC_Array_I[i] = ADC_current;				//save data from ADC read
-	ADC_Array_Vn[i] = ADC_voltagen;
-	ADC_Array_Vp[i] = ADC_voltagep;
+	ADC_Array_Iin[i] = ADC_Iin;				//save data from ADC read
+	ADC_Array_VinN[i] = ADC_VinN;
+	ADC_Array_VinP[i] = ADC_VinP;
+	ADC_Array_Iout[i] = ADC_Iout;
+	ADC_Array_VoutN[i] = ADC_VoutN;
+	ADC_Array_VoutP[i] = ADC_VoutP;
 
-	ADC_SUM_I = ADC_SUM_I + ADC_Array_I[i];		//summing data and add new data
-	ADC_SUM_Vn = ADC_SUM_Vn + ADC_Array_Vn[i];
-	ADC_SUM_Vp = ADC_SUM_Vp + ADC_Array_Vp[i];
+	ADC_SUM_Iin = ADC_SUM_Iin + ADC_Array_Iin[i];		//summing data and add new data
+	ADC_SUM_VinN = ADC_SUM_VinN + ADC_Array_VinN[i];
+	ADC_SUM_VinP = ADC_SUM_VinP + ADC_Array_VinP[i];
+	ADC_SUM_Iout = ADC_SUM_Iout + ADC_Array_Iout[i];
+	ADC_SUM_VoutN = ADC_SUM_VoutN + ADC_Array_VoutP[i];
+	ADC_SUM_VoutP = ADC_SUM_VoutP + ADC_Array_VoutP[i];
 
-	ADC_Average_I = (float) ADC_SUM_I / maxdata;	//calculate average data
-	ADC_Average_Vn = (float) ADC_SUM_Vn / maxdata;
-	ADC_Average_Vp = (float) ADC_SUM_Vp / maxdata;
+	ADC_Average_Iin = (float) ADC_SUM_Iin / maxdata;	//calculate average data
+	ADC_Average_VinN = (float) ADC_SUM_VinN / maxdata;
+	ADC_Average_VinP = (float) ADC_SUM_VinP / maxdata;
+	ADC_Average_Iout = (float) ADC_SUM_Iout / maxdata;
+	ADC_Average_VoutN = (float) ADC_SUM_VoutN / maxdata;
+	ADC_Average_VoutP = (float) ADC_SUM_VoutP / maxdata;
 
 	i++;
 	i = i % maxdata;
 
 	//Current value calculation and calibration
-	Current_Charger = 0.0125*ADC_Average_I - 24.845 - OFFSET_CurrentSense;
-	OFFSET_Calibration = 0.0125*ADC_Average_I - 24.845;
+	Current_Charger = 0.0125*ADC_Average_Iout - 24.845 - OFFSET_CurrentSense;
+	OFFSET_Calibration = 0.0125*ADC_Average_Iout - 24.845;
 	if (Current_Charger<=0)
 		Current_Charger = 0;
 
 	//Voltage value calculation and calibration
-	ADC_VoltageResult = fabs (ADC_Average_Vn - ADC_Average_Vp);
+	ADC_VoltageResult = fabs (ADC_Average_VoutN - ADC_Average_VoutP);
 	Voltage_Charger = ADC_VoltageResult*0.0275-0.018;
 	if(Voltage_Charger <= 0)
 		Voltage_Charger = 0;

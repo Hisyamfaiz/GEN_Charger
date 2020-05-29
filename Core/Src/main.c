@@ -188,11 +188,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	if (hadc->Instance==ADC1)
 	{
-		ADC_voltagen = ADC_value[0];
-		ADC_voltagep = ADC_value[1];
-		ADC_current = ADC_value[2];
+		ADC_VoutN = ADC_value[0];
+		ADC_VoutP = ADC_value[1];
+		ADC_Iin = ADC_value[2];
 		ADC_temp1 = ADC_value[3];
 		ADC_temp2 = ADC_value[4];
+		ADC_VinN = ADC_value[5];
+		ADC_VinP = ADC_value[6];
+		ADC_Iout = ADC_value[7];
 	}
 }
 
@@ -228,7 +231,8 @@ void CHARGER_ON_Init(void)
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_Base_Start_IT(&htim2);
 	HAL_TIM_Base_Start_IT(&htim3);
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&ADC_value, 5);
+	HAL_TIM_Base_Start_IT(&htim4);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&ADC_value, 8);
 	HAL_Delay(1000);
 //	Charger_Mode=1;
 }
@@ -277,7 +281,7 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (5,33);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "A = %4.0f | %4.2f", ADC_Average_I, Current_Charger);
+	sprintf(buffer_i2c, "A = %4.0f | %4.2f", ADC_Average_Iout, Current_Charger);
 	//(float)Batt_current.m_uint16t/100);
 	SSD1306_GotoXY (5,43);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
