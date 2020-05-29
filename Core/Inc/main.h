@@ -75,7 +75,7 @@ void Display_StanbyMode(void);
 void Display_ChargeMode(void);
 void Display_ProtectionMode(void);
 
-uint16_t 	ADC_value[8];
+uint16_t 	ADC_value[5];
 uint16_t 	ADC_Iin;
 uint16_t 	ADC_VinN;
 uint16_t 	ADC_VinP;

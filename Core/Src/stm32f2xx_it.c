@@ -281,7 +281,7 @@ void TIM2_IRQHandler(void)
 	ADC_SUM_VinN = ADC_SUM_VinN + ADC_Array_VinN[i];
 	ADC_SUM_VinP = ADC_SUM_VinP + ADC_Array_VinP[i];
 	ADC_SUM_Iout = ADC_SUM_Iout + ADC_Array_Iout[i];
-	ADC_SUM_VoutN = ADC_SUM_VoutN + ADC_Array_VoutP[i];
+	ADC_SUM_VoutN = ADC_SUM_VoutN + ADC_Array_VoutN[i];
 	ADC_SUM_VoutP = ADC_SUM_VoutP + ADC_Array_VoutP[i];
 
 	ADC_Average_Iin = (float) ADC_SUM_Iin / maxdata;	//calculate average data
