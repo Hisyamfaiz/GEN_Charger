@@ -234,7 +234,7 @@ void CHARGER_ON_Init(void)
 	HAL_TIM_Base_Start_IT(&htim4);
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&ADC_value, 8);
 	HAL_Delay(1000);
-	Charger_Mode=1;
+//	Charger_Mode=1;
 }
 
 void Display_StanbyMode(void){
@@ -263,7 +263,7 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (12,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, Batt_SOC.m_uint16t);
+	sprintf(buffer_i2c, "D = %4.1f | %2d|%2d \r\n", dc, Batt_SOC.m_uint16t, Batt_temp.m_uint16t);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
 	SSD1306_GotoXY (5,13);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);

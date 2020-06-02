@@ -78,11 +78,11 @@ float		OFFSET_CurrentSense;
 float		TripTime_OverCurrent,
 			Count_TripTime;
 
-uint8_t		SetProtection_ShortCircuit = 50;//Setting current protection
-uint8_t		SetProtection_OverCurrent = 5;	//Setting current protection
-uint8_t		SetProtection_OverVoltage = 40;	//Setting voltage protection
-uint8_t		SetProtection_Temp1 = 60; 	//Setting inductor Temperature protection
-uint8_t		SetProtection_Temp2 = 60;	//Setting Mosfet & Diode Temperature protection
+uint8_t		SetProtection_ShortCircuit = 20;//Setting current protection
+uint8_t		SetProtection_OverCurrent = 7;	//Setting current protection
+uint8_t		SetProtection_OverVoltage = 50;	//Setting voltage protection
+uint8_t		SetProtection_Temp2 = 60; 	//Setting inductor Temperature protection
+uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
 
 void Clear_ProtectionFlag(void);
 
@@ -559,7 +559,7 @@ void Fault_Check(void)
 
 	else if((SetProtection_OverCurrent - Current_Charger)<=0 && Flag_ChargerOverCurrent==0 ){
 		Eror_Code=17;
-		TripTime_OverCurrent = 2/(((Current_Charger/SetProtection_OverCurrent)*(Current_Charger/SetProtection_OverCurrent))-1);
+		TripTime_OverCurrent = 1.8/(((Current_Charger/SetProtection_OverCurrent)*(Current_Charger/SetProtection_OverCurrent))-1);
 		Count_TripTime += 0.001;
 
 		if(Count_TripTime >= TripTime_OverCurrent){
