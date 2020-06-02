@@ -263,7 +263,7 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (12,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", duty, Batt_SOC.m_uint16t);
+	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, Batt_SOC.m_uint16t);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
 	SSD1306_GotoXY (5,13);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
