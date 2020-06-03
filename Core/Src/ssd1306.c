@@ -55,7 +55,7 @@ uint8_t SSD1306_Init(void) {
 	}
 	
 	/* A little delay */
-	uint32_t p = 2500000;
+	uint32_t p = 25000;
 	while(p>0)
 		p--;
 	

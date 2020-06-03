@@ -43,6 +43,11 @@ void CAN_Setting(void);
 void CAN_Tx_Process(void);
 void CAN_Rx_Process(void);
 
+float	BPack_Temp,
+		BPack_Capacity,
+		BPack_Voltage,
+		BPack_Current;
+
 union 	uint16t_byte {
 		uint16_t m_uint16t;
 		uint8_t  m_bytes[sizeof(float)];};

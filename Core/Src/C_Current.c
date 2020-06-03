@@ -8,7 +8,7 @@
 #include "stm32f2xx_hal.h"
 #include "Control_Init.h"
 #include "can.h"
-#define Battery_Capacity 22
+#define Battery_Capacity 15
 
 //float outNH=-0.05, outNB=-0.025, outNM=-0.0125, outNS=-0.0075, outZ=0, outPS=0.0075, outPM=0.0125, outPB=0.025, outPH=0.05;
 float outNH=-0.05, outNB=-0.025, outNM=-0.01, outNS=-0.005, outZ=0, outPS=0.005, outPM=0.01, outPB=0.025, outPH=0.05;
@@ -25,19 +25,19 @@ void Constant_Current()
 		if(flag_Derating==1)
 			SetPoint_CC = 0.5*CC_Value;
 		else {
-			if(Batt_temp.m_uint16t <= 10)
+			if(BPack_Temp <= 10)
 				SetPoint_CC = 0.5*CC_Value;
 
-			if(Batt_temp.m_uint16t >10 && Batt_temp.m_uint16t <= 20) // Temperature 10 ~ 20
+			if(BPack_Temp >10 && BPack_Temp < 20) // Temperature 10 ~ 20
 				SetPoint_CC = 0.5*CC_Value;
 
-			if(Batt_temp.m_uint16t > 20 && Batt_temp.m_uint16t <= 30) // Temperature 20 ~ 30
+			if(BPack_Temp >= 20 && BPack_Temp < 30) // Temperature 20 ~ 30
 				SetPoint_CC = 0.7*CC_Value;
 
-			if(Batt_temp.m_uint16t > 30 && Batt_temp.m_uint16t <= 40)
+			if(BPack_Temp >= 30 && BPack_Temp <= 40)
 				SetPoint_CC = CC_Value;
 
-			if(Batt_temp.m_uint16t > 40 && Batt_temp.m_uint16t <= 50)
+			if(BPack_Temp > 40 && BPack_Temp <= 50)
 				SetPoint_CC = 0.5*CC_Value;
 		}
 	}

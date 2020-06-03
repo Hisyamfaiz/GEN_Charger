@@ -80,7 +80,7 @@ float		TripTime_OverCurrent,
 
 uint8_t		SetProtection_ShortCircuit = 20;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 7;	//Setting current protection
-uint8_t		SetProtection_OverVoltage = 50;	//Setting voltage protection
+uint8_t		SetProtection_OverVoltage = 65;	//Setting voltage protection
 uint8_t		SetProtection_Temp2 = 60; 	//Setting inductor Temperature protection
 uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
 

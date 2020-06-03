@@ -235,6 +235,10 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 			Batt_SOC.m_bytes[1] = Rx_data[5];
 			Batt_temp.m_bytes[0] = Rx_data[6];
 			Batt_temp.m_bytes[1] = Rx_data[7];
+
+			BPack_Temp = (Batt_temp.m_uint16t/10)-40;
+			BPack_Voltage = Batt_voltage.m_uint16t/100;
+			BPack_Current = (Batt_current.m_uint16t/100)-50;
 		}
 
 		// CAN ID receive #2 (0x7b2)
@@ -254,7 +258,6 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 	//			flag_trip_overtemperature = (Rx_data[6]>>5)&0x01;
 	//			flag_trip_undertemperature = (Rx_data[6]>>6)&0x01;
 			flag_trip_unbalance = (Rx_data[6]>>7)&0x01;
-
 			flag_trip_undervoltage = Rx_data[7]&0x01;
 			flag_trip_overvoltage = (Rx_data[7]<<1)&0x01;
 			flag_trip_SOCOverDischarge = (Rx_data[7]<<2)&0x01;
@@ -262,6 +265,8 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 			charge_state = (Rx_data[7]<<4)&0x01;
 			discharge_state = (Rx_data[7]<<5)&0x01;
 			sleep_state = (Rx_data[7]<<6)&0x01;
+
+			BPack_Capacity = Batt_capacity.m_uint16t/100;
 		}
 
 
