@@ -217,6 +217,12 @@ void Constant_Current()
 
 	duty = dc/100;
 
+	if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1 && Eror_Code==0){
+		Charger_Mode = 0;
+		Handshaking = 0;
+		identified = 0;
+		UNIQUE_Code = 0;
+	}
 //	if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1 && Eror_Code==0){
 //			  duty=duty+0.1;
 //			  HAL_GPIO_WritePin(GPIOC, Buzzer_Pin,1);

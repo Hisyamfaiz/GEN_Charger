@@ -259,8 +259,6 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
 
-	CAN_Rx_Process();	//can receive handle
-
 	// *********************** Sensing Process (ADC average) ******************************
 
 	ADC_SUM_Iin = ADC_SUM_Iin - ADC_Array_Iin[i];		//delete old data
@@ -364,6 +362,7 @@ void TIM2_IRQHandler(void)
 
 	if(Charger_Mode == 0){	//standby mode
 		duty=0;
+		dc=0;
 		htim1.Instance->CCR1=duty*TIM1->ARR;
 		Clear_ProtectionFlag();
 		Eror_Code = 0;
@@ -430,7 +429,7 @@ void TIM3_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-//	CAN_Rx_Process();	//can receive handle
+	CAN_Rx_Process();	//can receive handle
 
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
@@ -515,8 +514,8 @@ void Eror_CodeCheck(void)
 	else if (Flag_ChargerUnderVoltage==1)
 		Eror_Code=13;	//Charger Under Voltage
 
-//	else if (Flag_ChargerOverTemperature==1)
-//		Eror_Code=14;	//Charger Over Temperature
+	else if (Flag_ChargerOverTemperature==1)
+		Eror_Code=14;	//Charger Over Temperature
 
 	else if (Flag_ChargerUnderTemperature==1)
 		Eror_Code=15;	//Charger Under Temperature
@@ -570,7 +569,7 @@ void Fault_Check(void)
 	// Decrease Charger Rating check
 	// Temp1 = mosfet & diode
 	// Temp2 = inductor
-	else if ( Temp_T1 >= (SetProtection_Temp1-15)  || Temp_T2 >= (SetProtection_Temp2-15)){
+	else if ( Temp_T1 >= (SetProtection_Temp1-10)  || Temp_T2 >= (SetProtection_Temp2-10)){
 		flag_Derating = 1;
 		Eror_Code = 14;
 		if(Temp_T1 >= SetProtection_Temp1 || Temp_T2 >= SetProtection_Temp2){

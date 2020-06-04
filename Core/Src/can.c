@@ -22,6 +22,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "main.h"
+#include "string.h"
 
 extern CAN_TxHeaderTypeDef	Tx_Header;
 extern CAN_RxHeaderTypeDef 	Rx_Header;
@@ -29,7 +30,8 @@ extern CAN_RxHeaderTypeDef 	Rx_Header;
 uint8_t		Tx_data[8];
 uint32_t	TxMailbox;
 uint8_t		Rx_data[8];
-uint8_t		identified=0;
+uint8_t		Wakeup_BPack_Delay=0;
+int			Delay_Charger=0;
 
 /* USER CODE END 0 */
 
@@ -167,8 +169,8 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 	HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 	Communication_Flag = 1;
 }
-		if(Handshaking==0){
-			if(identified == 0){
+		if(Handshaking==0 && ready_handshaking == 1){
+			if(identified <= 0){
 				Tx_Header.StdId = 0x1B2;
 				Tx_data[0] = 0;
 				Tx_data[1] = 0;
@@ -179,8 +181,13 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 				Tx_data[6] = 0;
 				Tx_data[7] = 0x01;
 				Tx_Header.DLC = 8;
-				if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+				Wakeup_BPack_Delay += 1;
+				if(Wakeup_BPack_Delay == 100){
+					if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+					Wakeup_BPack_Delay = 0;
+				}
 			}
+
 		// CAN ID receive (Handshaking)
 			if(Rx_Header.ExtId>>20==0x0E0){
 				if(Rx_data[6]==0x55 && identified==0){
@@ -205,11 +212,6 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 					UNIQUE_Code = Rx_Header.ExtId & 0x000FFFFF;
 					Handshaking=1;
 
-					uint32_t Delay_Charger = 20000000;
-					while(Delay_Charger>0)
-					Delay_Charger--;
-					Charger_Mode=1;
-
 					Tx_Header.StdId = 0x0C1;
 					Tx_data[0] = UNIQUE_Code >> 12;
 					Tx_data[1] = UNIQUE_Code >> 4;
@@ -225,106 +227,127 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 		}
 
 		if(Handshaking==1){
-		// CAN ID receive #1 (0x7b1)
-		if(Rx_Header.ExtId == (0x0B0<<20|UNIQUE_Code)){
-			Batt_voltage.m_bytes[0] = Rx_data[0];
-			Batt_voltage.m_bytes[1] = Rx_data[1];
-			Batt_current.m_bytes[0] = Rx_data[2];
-			Batt_current.m_bytes[1] = Rx_data[3];
-			Batt_SOC.m_bytes[0] = Rx_data[4];
-			Batt_SOC.m_bytes[1] = Rx_data[5];
-			Batt_temp.m_bytes[0] = Rx_data[6];
-			Batt_temp.m_bytes[1] = Rx_data[7];
 
-			BPack_Temp = (Batt_temp.m_uint16t/10)-40;
-			BPack_Voltage = Batt_voltage.m_uint16t/100;
-			BPack_Current = (Batt_current.m_uint16t/100)-50;
-		}
+			if(Rx_Header.StdId == 0x1C0){
+				Start_Charge = Rx_data[0];
 
-		// CAN ID receive #2 (0x7b2)
-		if(Rx_Header.ExtId == (0x0B1<<20|UNIQUE_Code)){
-			Batt_capacity.m_bytes[0] = Rx_data[0];
-			Batt_capacity.m_bytes[1] = Rx_data[1];
-			Batt_SOH.m_bytes[0] = Rx_data[2];
-			Batt_SOH.m_bytes[1] = Rx_data[3];
-			Batt_cycle.m_bytes[0] = Rx_data[4];
-			Batt_cycle.m_bytes[1] = Rx_data[5];
+				if(Rx_data[0] == 1 && LastCharger_Mode == 0 ){
+					Charger_Mode = Start_Charge;
+					LastCharger_Mode = 1;
+				}
+				if(Rx_data[0] == 0 && LastCharger_Mode == 1 ){
+					Charger_Mode = Start_Charge;
+					Handshaking = 0;
+					UNIQUE_Code = 0;
+					LastCharger_Mode = 0;
 
-			flag_trip_shortcircuit = Rx_data[6]&0x01;
-			flag_trip_overcurrentdischarge = (Rx_data[6]>>1)&0x01;
-			flag_trip_overcurrentcharge = (Rx_data[6]>>2)&0x01;
-			flag_trip_overtemperature = (Rx_data[6]>>3)&0x01;
-			flag_trip_undertemperature = (Rx_data[6]>>4)&0x01;
-	//			flag_trip_overtemperature = (Rx_data[6]>>5)&0x01;
-	//			flag_trip_undertemperature = (Rx_data[6]>>6)&0x01;
-			flag_trip_unbalance = (Rx_data[6]>>7)&0x01;
-			flag_trip_undervoltage = Rx_data[7]&0x01;
-			flag_trip_overvoltage = (Rx_data[7]<<1)&0x01;
-			flag_trip_SOCOverDischarge = (Rx_data[7]<<2)&0x01;
-			flag_trip_systemfailure = (Rx_data[7]<<3)&0x01;
-			charge_state = (Rx_data[7]<<4)&0x01;
-			discharge_state = (Rx_data[7]<<5)&0x01;
-			sleep_state = (Rx_data[7]<<6)&0x01;
+					Tx_Header.StdId = 0x1B2;
+					memset(Tx_data, 0, 8*sizeof(Tx_data[0]));
+					if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+					identified = 0;
+				}
+				Rx_Header.StdId = 0;
+			}
 
-			BPack_Capacity = Batt_capacity.m_uint16t/100;
-		}
+			// CAN ID receive #1 (0x7b1)
+			if(Rx_Header.ExtId == (0x0B0<<20|UNIQUE_Code)){
+				Batt_voltage.m_bytes[0] = Rx_data[0];
+				Batt_voltage.m_bytes[1] = Rx_data[1];
+				Batt_current.m_bytes[0] = Rx_data[2];
+				Batt_current.m_bytes[1] = Rx_data[3];
+				Batt_SOC.m_bytes[0] = Rx_data[4];
+				Batt_SOC.m_bytes[1] = Rx_data[5];
+				Batt_temp.m_bytes[0] = Rx_data[6];
+				Batt_temp.m_bytes[1] = Rx_data[7];
+
+				BPack_Temp = (Batt_temp.m_uint16t/10)-40;
+				BPack_Voltage = Batt_voltage.m_uint16t/100;
+				BPack_Current = (Batt_current.m_uint16t/100)-50;
+			}
+
+			// CAN ID receive #2 (0x7b2)
+			if(Rx_Header.ExtId == (0x0B1<<20|UNIQUE_Code)){
+				Batt_capacity.m_bytes[0] = Rx_data[0];
+				Batt_capacity.m_bytes[1] = Rx_data[1];
+				Batt_SOH.m_bytes[0] = Rx_data[2];
+				Batt_SOH.m_bytes[1] = Rx_data[3];
+				Batt_cycle.m_bytes[0] = Rx_data[4];
+				Batt_cycle.m_bytes[1] = Rx_data[5];
+
+				flag_trip_shortcircuit = Rx_data[6]&0x01;
+				flag_trip_overcurrentdischarge = (Rx_data[6]>>1)&0x01;
+				flag_trip_overcurrentcharge = (Rx_data[6]>>2)&0x01;
+				flag_trip_overtemperature = (Rx_data[6]>>3)&0x01;
+				flag_trip_undertemperature = (Rx_data[6]>>4)&0x01;
+		//			flag_trip_overtemperature = (Rx_data[6]>>5)&0x01;
+		//			flag_trip_undertemperature = (Rx_data[6]>>6)&0x01;
+				flag_trip_unbalance = (Rx_data[6]>>7)&0x01;
+				flag_trip_undervoltage = Rx_data[7]&0x01;
+				flag_trip_overvoltage = (Rx_data[7]<<1)&0x01;
+				flag_trip_SOCOverDischarge = (Rx_data[7]<<2)&0x01;
+				flag_trip_systemfailure = (Rx_data[7]<<3)&0x01;
+				charge_state = (Rx_data[7]<<4)&0x01;
+				discharge_state = (Rx_data[7]<<5)&0x01;
+				sleep_state = (Rx_data[7]<<6)&0x01;
+
+				BPack_Capacity = Batt_capacity.m_uint16t/100;
+			}
 
 
-		// *********************** Start Cell  Voltage Data Send ******************************
-		if(Rx_Header.ExtId == (0x0B4<<20|UNIQUE_Code)){
-			vcell_15databyte[0].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[0].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[1].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[1].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[2].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[2].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[3].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[3].m_bytes[0] = Rx_data[7];
-		}
+			// *********************** Start Cell  Voltage Data Send ******************************
+			if(Rx_Header.ExtId == (0x0B4<<20|UNIQUE_Code)){
+				vcell_15databyte[0].m_bytes[1] = Rx_data[0];
+				vcell_15databyte[0].m_bytes[0] = Rx_data[1];
+				vcell_15databyte[1].m_bytes[1] = Rx_data[2];
+				vcell_15databyte[1].m_bytes[0] = Rx_data[3];
+				vcell_15databyte[2].m_bytes[1] = Rx_data[4];
+				vcell_15databyte[2].m_bytes[0] = Rx_data[5];
+				vcell_15databyte[3].m_bytes[1] = Rx_data[6];
+				vcell_15databyte[3].m_bytes[0] = Rx_data[7];
+			}
 
-		if(Rx_Header.ExtId == (0x0B5<<20|UNIQUE_Code)){
-			vcell_15databyte[4].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[4].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[5].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[5].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[6].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[6].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[7].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[7].m_bytes[0] = Rx_data[7];
-		}
+			if(Rx_Header.ExtId == (0x0B5<<20|UNIQUE_Code)){
+				vcell_15databyte[4].m_bytes[1] = Rx_data[0];
+				vcell_15databyte[4].m_bytes[0] = Rx_data[1];
+				vcell_15databyte[5].m_bytes[1] = Rx_data[2];
+				vcell_15databyte[5].m_bytes[0] = Rx_data[3];
+				vcell_15databyte[6].m_bytes[1] = Rx_data[4];
+				vcell_15databyte[6].m_bytes[0] = Rx_data[5];
+				vcell_15databyte[7].m_bytes[1] = Rx_data[6];
+				vcell_15databyte[7].m_bytes[0] = Rx_data[7];
+			}
 
-		if(Rx_Header.ExtId == (0x0B6<<20|UNIQUE_Code)){
-			vcell_15databyte[8].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[8].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[9].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[9].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[10].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[10].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[11].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[11].m_bytes[0] = Rx_data[7];
-		}
+			if(Rx_Header.ExtId == (0x0B6<<20|UNIQUE_Code)){
+				vcell_15databyte[8].m_bytes[1] = Rx_data[0];
+				vcell_15databyte[8].m_bytes[0] = Rx_data[1];
+				vcell_15databyte[9].m_bytes[1] = Rx_data[2];
+				vcell_15databyte[9].m_bytes[0] = Rx_data[3];
+				vcell_15databyte[10].m_bytes[1] = Rx_data[4];
+				vcell_15databyte[10].m_bytes[0] = Rx_data[5];
+				vcell_15databyte[11].m_bytes[1] = Rx_data[6];
+				vcell_15databyte[11].m_bytes[0] = Rx_data[7];
+			}
 
-		if(Rx_Header.ExtId == (0x0B7<<20|UNIQUE_Code)){
-			vcell_15databyte[12].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[12].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[13].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[13].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[14].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[14].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[15].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[15].m_bytes[0] = Rx_data[7];
-		}
-		}
-		// ******************************End Cell  Voltage Data Send**************************************
-		BP_Voltage = Batt_voltage.m_uint16t/100;
-		BP_Current = (Batt_current.m_uint16t/100)-50;
-		BP_Temp = (Batt_temp.m_uint16t/10)-40;
-		BP_SOC = Batt_SOC.m_uint16t;
-		BP_Capacity = Batt_capacity.m_uint16t/100;
-		BP_SOH = Batt_SOH.m_uint16t;
-//		BP_Cycle = Batt_cycle.m_uint16;
-
-}
+			if(Rx_Header.ExtId == (0x0B7<<20|UNIQUE_Code)){
+				vcell_15databyte[12].m_bytes[1] = Rx_data[0];
+				vcell_15databyte[12].m_bytes[0] = Rx_data[1];
+				vcell_15databyte[13].m_bytes[1] = Rx_data[2];
+				vcell_15databyte[13].m_bytes[0] = Rx_data[3];
+				vcell_15databyte[14].m_bytes[1] = Rx_data[4];
+				vcell_15databyte[14].m_bytes[0] = Rx_data[5];
+				vcell_15databyte[15].m_bytes[1] = Rx_data[6];
+				vcell_15databyte[15].m_bytes[0] = Rx_data[7];
+			}
+			}
+			// ******************************End Cell  Voltage Data Send**************************************
+			BP_Voltage = Batt_voltage.m_uint16t/100;
+			BP_Current = (Batt_current.m_uint16t/100)-50;
+			BP_Temp = (Batt_temp.m_uint16t/10)-40;
+			BP_SOC = Batt_SOC.m_uint16t;
+			BP_Capacity = Batt_capacity.m_uint16t/100;
+			BP_SOH = Batt_SOH.m_uint16t;
+	//		BP_Cycle = Batt_cycle.m_uint16;
+	}
 
 //void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 //	}

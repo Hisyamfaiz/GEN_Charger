@@ -121,7 +121,10 @@ float		Res_T1,
 
 float 		duty;
 
-uint8_t		Charger_Mode;
+uint8_t		Charger_Mode,
+			LastCharger_Mode,
+			ready_handshaking,
+			flag_charge;
 
 uint8_t		Flag_ChargerOverVoltage,
 			Flag_ChargerUnderVoltage,
@@ -150,7 +153,9 @@ uint8_t		charge_state,
 			discharge_state,
 			sleep_state,
 			Communication_Flag,
-			Handshaking;
+			Handshaking,
+			identified,
+			Start_Charge;
 
 float 		BP_Voltage,
 			BP_Capacity,

@@ -134,9 +134,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(Charger_Mode==1) 		Display_ChargeMode();
+	  if(Charger_Mode==1) 		{
+		  Display_ChargeMode();
+		  flag_charge = 1;
+	  }
 	  else if (Charger_Mode==2)	Display_ProtectionMode();
 	  else						Display_StanbyMode();
+
+	  if(flag_charge == 1 && Charger_Mode == 0){
+		  ready_handshaking = 0;
+		  HAL_Delay(5000);
+		  ready_handshaking = 1;
+		  flag_charge = 0;
+	  }
 
 	  HAL_IWDG_Refresh(&hiwdg);
   }
@@ -228,6 +238,7 @@ void CHARGER_ON_Init(void)
 	SSD1306_UpdateScreen(); //display
 	SSD1306_Fill (0);
 
+	ready_handshaking = 1;
 	HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_Base_Start_IT(&htim2);
