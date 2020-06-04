@@ -141,10 +141,10 @@ int main(void)
 	  else if (Charger_Mode==2)	Display_ProtectionMode();
 	  else						Display_StanbyMode();
 
-	  if(flag_charge == 1 && Charger_Mode == 0){
-		  ready_handshaking = 0;
+	  if(flag_charge == 1 && Charger_Mode == 0){	// Deteksi perubahan state dari charge ke standby
+		  Ready_Handshaking = 0;					// Variable bantu untuk delay handshaking
 		  HAL_Delay(5000);
-		  ready_handshaking = 1;
+		  Ready_Handshaking = 1;
 		  flag_charge = 0;
 	  }
 
@@ -238,7 +238,7 @@ void CHARGER_ON_Init(void)
 	SSD1306_UpdateScreen(); //display
 	SSD1306_Fill (0);
 
-	ready_handshaking = 1;
+	Ready_Handshaking = 1;
 	HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_Base_Start_IT(&htim2);

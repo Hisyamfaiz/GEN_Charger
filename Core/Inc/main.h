@@ -123,7 +123,7 @@ float 		duty;
 
 uint8_t		Charger_Mode,
 			LastCharger_Mode,
-			ready_handshaking,
+			Ready_Handshaking,
 			flag_charge;
 
 uint8_t		Flag_ChargerOverVoltage,

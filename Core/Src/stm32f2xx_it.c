@@ -530,8 +530,7 @@ void Eror_CodeCheck(void)
 		Eror_Code=18;	//Charger Over Current
 	else if(Flag_ChargerLostCommunication==1)
 		Eror_Code=19;
-//	else
-//		Eror_Code=0;
+
 }
 
 void Clear_ProtectionFlag(void)
