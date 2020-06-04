@@ -411,10 +411,15 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-//	CAN_Tx_Process();
+
+	if(!(Handshaking == 0 && identified == 1) ) CAN_Tx_Process();
+
 	SS+=1;
-
-
+	if(SS >= 5 && Handshaking ==1){
+		if(Communication_Flag == 1) Communication_Flag = 0;
+		else Flag_ChargerLostCommunication = 1;
+		SS = 0;
+	}
 
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
@@ -484,53 +489,57 @@ void DMA2_Stream0_IRQHandler(void)
 
 void Eror_CodeCheck(void)
 {
-	if (flag_trip_shortcircuit==1)
-		Eror_Code=1;	//Battery Pack short circuit
+	if (flag_trip_unbalance==1)
+			Eror_Code=6;	//Battery Pack unbalance
 
-	else if (flag_trip_overcurrentcharge==1)
-		Eror_Code=3;	//Battery Pack over current charge
-
-	else if (flag_trip_overtemperature==1){
-		Eror_Code=4;	//Battery Pack over temperature
-		LastFlag_OverTemperature = 1;
-	}
+	if (flag_trip_overtemperature==1){
+			Eror_Code=8;	//Battery Pack over temperature
+			LastFlag_OverTemperature = 1;
+		}
 
 	else if (flag_trip_undertemperature==1)
-		Eror_Code=5;	//Battery Pack under temperature
+			Eror_Code=9;	//Battery Pack under temperature
 
-	else if (flag_trip_unbalance==1)
-		Eror_Code=8;	//Battery Pack unbalance
-
-	else if (flag_trip_undervoltage==1)
-		Eror_Code=9;	//Battery Pack under voltage
+	else if (flag_trip_overcurrentcharge==1)
+			Eror_Code=10;	//Battery Pack over current charge
 
 	else if (flag_trip_overvoltage==1)
-		Eror_Code=10;	//Battery Pack over voltage
+			Eror_Code=11;	//Battery Pack over voltage
+
+	else if (flag_trip_shortcircuit==1)
+			Eror_Code=12;	//Battery Pack short circuit
 
 	else if (flag_trip_systemfailure==1)
-			Eror_Code=12;	//Battery Pack system failure
+			Eror_Code=13;	//Battery Pack system failure
+
 
 
 	else if (Flag_ChargerUnderVoltage==1)
-		Eror_Code=13;	//Charger Under Voltage
-
-	else if (Flag_ChargerOverTemperature==1)
-		Eror_Code=14;	//Charger Over Temperature
-
-	else if (Flag_ChargerUnderTemperature==1)
-		Eror_Code=15;	//Charger Under Temperature
-
-	else if (Flag_ChargerShortCircuit==1)
-		Eror_Code=16;	//Charger Short Circuit
-
-	else if (Flag_ChargerOverCurrent==1)
-		Eror_Code=17;	//Charger Over Current
+		Eror_Code=14;	//Charger Under Voltage
 
 	else if (Flag_ChargerOverVoltage==1)
-		Eror_Code=18;	//Charger Over Current
-	else if(Flag_ChargerLostCommunication==1)
-		Eror_Code=19;
+		Eror_Code=15;	//Charger Over Current
 
+	else if (Flag_ChargerOverTemperature==1)
+		Eror_Code=16;	//Charger Over Temperature
+
+	else if (Flag_ChargerUnderTemperature==1)
+		Eror_Code=17;	//Charger Under Temperature
+
+	else if (Flag_ChargerShortCircuit==1)
+		Eror_Code=18;	//Charger Short Circuit
+
+	else if (Flag_ChargerOverCurrent==1)
+		Eror_Code=19;	//Charger Over Current
+
+	else if (Flag_InputUnderVoltage==1)
+		Eror_Code=20;	//Input Under Voltage
+
+	else if (Flag_InputOverVoltage==1)
+		Eror_Code=21;	//Input Over Current
+
+	else if(Flag_ChargerLostCommunication==1)
+		Eror_Code=22;
 }
 
 void Clear_ProtectionFlag(void)

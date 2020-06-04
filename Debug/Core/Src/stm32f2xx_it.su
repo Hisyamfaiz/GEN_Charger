@@ -11,10 +11,10 @@ stm32f2xx_it.c:230:6:CAN1_RX1_IRQHandler	8	static
 stm32f2xx_it.c:244:6:CAN1_SCE_IRQHandler	8	static
 stm32f2xx_it.c:258:6:TIM2_IRQHandler	16	static
 stm32f2xx_it.c:411:6:TIM3_IRQHandler	8	static
-stm32f2xx_it.c:429:6:TIM4_IRQHandler	8	static
-stm32f2xx_it.c:444:6:USART1_IRQHandler	8	static
-stm32f2xx_it.c:458:6:USART3_IRQHandler	8	static
-stm32f2xx_it.c:472:6:DMA2_Stream0_IRQHandler	8	static
-stm32f2xx_it.c:485:6:Eror_CodeCheck	4	static
-stm32f2xx_it.c:537:6:Clear_ProtectionFlag	4	static
-stm32f2xx_it.c:552:6:Fault_Check	16	static
+stm32f2xx_it.c:434:6:TIM4_IRQHandler	8	static
+stm32f2xx_it.c:449:6:USART1_IRQHandler	8	static
+stm32f2xx_it.c:463:6:USART3_IRQHandler	8	static
+stm32f2xx_it.c:477:6:DMA2_Stream0_IRQHandler	8	static
+stm32f2xx_it.c:490:6:Eror_CodeCheck	4	static
+stm32f2xx_it.c:545:6:Clear_ProtectionFlag	4	static
+stm32f2xx_it.c:560:6:Fault_Check	16	static

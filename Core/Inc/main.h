@@ -132,7 +132,9 @@ uint8_t		Flag_ChargerOverVoltage,
 			Flag_ChargerUnderTemperature,
 			Flag_ChargerShortCircuit,
 			Flag_ChargerOverCurrent,
-			Flag_ChargerLostCommunication;
+			Flag_ChargerLostCommunication,
+			Flag_InputUnderVoltage,
+			Flag_InputOverVoltage;
 
 uint8_t 	flag_trip_overtemperature,
 			flag_trip_undertemperature,

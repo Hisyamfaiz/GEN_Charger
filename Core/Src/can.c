@@ -153,14 +153,17 @@ void CAN_Setting(void)
 
 void CAN_Tx_Process(void)
 {
-  Tx_Header.ExtId = 0x7B1FFFFF;
-  Tx_data[0] = 1;
-  Tx_data[1] = 2;
-  Tx_data[2] = 3;
-  Tx_data[3] = 4;
+	Tx_Header.StdId = 0x0C1;
+	Tx_data[0] = UNIQUE_Code >> 12;
+	Tx_data[1] = UNIQUE_Code >> 4;
+	Tx_data[2] = UNIQUE_Code << 4;
+	Tx_data[3] = Eror_Code;
+	Tx_data[4] = Handshaking;
+	Tx_data[5] = 0;
+	Tx_data[6] = 0;
+	Tx_data[7] = 0;
 
-  Tx_Header.DLC = 8;
-  if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+	if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 }
 
 void CAN_Rx_Process(void)
@@ -169,7 +172,8 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 	HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 	Communication_Flag = 1;
 }
-		if(Handshaking==0 && ready_handshaking == 1){
+		if(Handshaking==0 && Ready_Handshaking == 1){
+
 			if(identified <= 0){
 				Tx_Header.StdId = 0x1B2;
 				Tx_data[0] = 0;
@@ -211,17 +215,6 @@ if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
 					if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 					UNIQUE_Code = Rx_Header.ExtId & 0x000FFFFF;
 					Handshaking=1;
-
-					Tx_Header.StdId = 0x0C1;
-					Tx_data[0] = UNIQUE_Code >> 12;
-					Tx_data[1] = UNIQUE_Code >> 4;
-					Tx_data[2] = UNIQUE_Code << 4;
-					Tx_data[3] = 0;
-					Tx_data[4] = 0;
-					Tx_data[5] = 0;
-					Tx_data[6] = 0;
-					Tx_data[7] = 0;
-					if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 				}
 			}
 		}
