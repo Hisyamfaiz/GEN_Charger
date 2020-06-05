@@ -93,7 +93,8 @@ int			ADC_SUM_Iin,
 			ADC_SUM_VinP,
 			ADC_SUM_Iout,
 			ADC_SUM_VoutN,
-			ADC_SUM_VoutP;
+			ADC_SUM_VoutP,
+			Delay_USART;
 
 uint16_t	ADC_Array_Iin[100],
 			ADC_Array_VinN[100],
@@ -112,7 +113,8 @@ float		ADC_Average_Iin,
 			OFFSET_Calibration,
 			OFFSET_CurrentSense,
 			Voltage_Charger,
-			ADC_VoltageResult;
+			ADC_VoltageResult,
+			Battery_Capacity;
 
 float		Res_T1,
 			Res_T2,

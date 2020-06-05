@@ -275,14 +275,18 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (12,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "D = %4.1f | %2d| %2.0f\r\n", dc, Batt_SOC.m_uint16t, BPack_Temp);
+	sprintf(buffer_i2c, "D = %4.1f | %2d| %2.0f\r\n", dc, Batt_SOC.m_uint16t, Battery_Capacity);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
 	SSD1306_GotoXY (5,13);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
+	if(Delay_USART == 1){
 	//sprintf(usart_Tx_buffer,"Test USART %d\r\n",(unsigned int)i);
+	sprintf(buffer_i2c,"%3.1f,%4.2f,%4.2f,%3d \r\n", duty, Voltage_Charger, Current_Charger, Batt_SOC.m_uint16t);
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
+	Delay_USART = 0;
+	}
 
 	HAL_Delay(10);
 

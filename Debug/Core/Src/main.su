@@ -4,5 +4,5 @@ main.c:197:6:HAL_ADC_ConvCpltCallback	16	static
 main.c:212:6:CHARGER_ON_Init	8	static
 main.c:252:6:Display_StanbyMode	8	static
 main.c:259:6:Display_ProtectionMode	8	static
-main.c:271:6:Display_ChargeMode	48	static
-main.c:320:6:Error_Handler	4	static
+main.c:271:6:Display_ChargeMode	56	static
+main.c:324:6:Error_Handler	4	static

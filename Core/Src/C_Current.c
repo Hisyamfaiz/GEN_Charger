@@ -8,17 +8,20 @@
 #include "stm32f2xx_hal.h"
 #include "Control_Init.h"
 #include "can.h"
-#define Battery_Capacity 15
+//#define Battery_Capacity 15
 
 //float outNH=-0.05, outNB=-0.025, outNM=-0.0125, outNS=-0.0075, outZ=0, outPS=0.0075, outPM=0.0125, outPB=0.025, outPH=0.05;
 float outNH=-0.05, outNB=-0.025, outNM=-0.01, outNS=-0.005, outZ=0, outPS=0.005, outPM=0.01, outPB=0.025, outPH=0.05;
 extern float Current_Charger;
 float 	SetPoint_CC;
-float	CC_Value = 0.3*Battery_Capacity;
+float	CC_Value;
 
 //test git2
 void Constant_Current()
 {
+	Battery_Capacity = Batt_capacity.m_uint16t;
+	CC_Value = 0.3*Battery_Capacity;
+
 	if(Batt_SOC.m_uint16t <= 15)
 		SetPoint_CC = 0.5*CC_Value;
 	else {

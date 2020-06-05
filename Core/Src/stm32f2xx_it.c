@@ -421,6 +421,7 @@ void TIM3_IRQHandler(void)
 		SS = 0;
 	}
 
+	Delay_USART = 1;
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
@@ -490,7 +491,7 @@ void DMA2_Stream0_IRQHandler(void)
 void Eror_CodeCheck(void)
 {
 	if (flag_trip_unbalance==1)
-			Eror_Code=6;	//Battery Pack unbalance
+			Eror_Code=6;	//Battery Pack imbalance
 
 	if (flag_trip_overtemperature==1){
 			Eror_Code=8;	//Battery Pack over temperature
