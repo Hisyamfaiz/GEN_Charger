@@ -8,7 +8,7 @@
 #include "stm32f2xx_hal.h"
 #include "Control_Init.h"
 #include "can.h"
-//#define Battery_Capacity 15
+//#define Battery_Capacity 22
 
 //float outNH=-0.05, outNB=-0.025, outNM=-0.0125, outNS=-0.0075, outZ=0, outPS=0.0075, outPM=0.0125, outPB=0.025, outPH=0.05;
 float outNH=-0.05, outNB=-0.025, outNM=-0.01, outNS=-0.005, outZ=0, outPS=0.005, outPM=0.01, outPB=0.025, outPH=0.05;
@@ -19,8 +19,7 @@ float	CC_Value;
 //test git2
 void Constant_Current()
 {
-	Battery_Capacity = Batt_capacity.m_uint16t;
-	CC_Value = 0.3*Battery_Capacity;
+	CC_Value = 0.3*BPack_Capacity;
 
 	if(Batt_SOC.m_uint16t <= 15)
 		SetPoint_CC = 0.5*CC_Value;
@@ -37,10 +36,10 @@ void Constant_Current()
 			if(BPack_Temp >= 20 && BPack_Temp < 30) // Temperature 20 ~ 30
 				SetPoint_CC = 0.7*CC_Value;
 
-			if(BPack_Temp >= 30 && BPack_Temp <= 40)
+			if(BPack_Temp >= 30 && BPack_Temp <= 45)
 				SetPoint_CC = CC_Value;
 
-			if(BPack_Temp > 40 && BPack_Temp <= 50)
+			if(BPack_Temp > 50)
 				SetPoint_CC = 0.5*CC_Value;
 		}
 	}
@@ -247,7 +246,8 @@ void Constant_Current()
 		Flag_ChargerOverCurrent == 1	||
 		Flag_ChargerOverTemperature == 1||
 		Flag_ChargerOverVoltage == 1	||
-		Flag_ChargerLostCommunication==1)
+		Flag_MiniPC_LostCommunication==1||
+		Flag_BMS_LostCommunication == 1)
 		{
 			duty=0;
 			Charger_Mode = 2;

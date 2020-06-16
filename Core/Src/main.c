@@ -69,6 +69,7 @@ uint8_t			z=0, data, EEPROM_data;
 char 			buffer_i2c[100];
 char 			usart_Tx_buffer[100];
 extern uint8_t	Eror_Code;
+extern uint8_t	Rx_data[8];
 extern float 	dc;
 /* USER CODE END PFP */
 
@@ -122,6 +123,7 @@ int main(void)
   Charger_Mode = 0;
   Eror_Code = 0;
   CHARGER_ON_Init();
+  reset=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -211,11 +213,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 
 void CHARGER_ON_Init(void)
 {
-	SSD1306_Init();
-	HAL_Delay(1000);
-	SSD1306_Fill(SSD1306_COLOR_BLACK);
-	SSD1306_UpdateScreen();
-
 	HAL_GPIO_WritePin(GPIOC, Buzzer_Pin,1);
 	HAL_Delay(300);
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
@@ -229,7 +226,14 @@ void CHARGER_ON_Init(void)
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
 	HAL_Delay(100);
 
+	SSD1306_Init();
+	HAL_Delay(1000);
+	SSD1306_Fill(SSD1306_COLOR_BLACK);
+	SSD1306_UpdateScreen();
+
+
 	CAN_Setting();
+//	HAL_CAN_IRQHandler(&hcan1);
 
 	SSD1306_GotoXY (15,10);
 	SSD1306_Puts ("GEN-I Charger", &Font_7x10, 1);
@@ -275,7 +279,7 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (12,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "D = %4.1f | %2d| %2.0f\r\n", dc, Batt_SOC.m_uint16t, Battery_Capacity);
+	sprintf(buffer_i2c, "D = %4.1f |%2d|%3d \r\n", dc, Batt_SOC.m_uint16t, reset);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
 	SSD1306_GotoXY (5,13);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
@@ -314,6 +318,7 @@ void Display_ChargeMode(void){
 
 	SSD1306_UpdateScreen(); //display
 }
+
 
 /* USER CODE END 4 */
 

@@ -42,11 +42,14 @@ void MX_CAN1_Init(void);
 void CAN_Setting(void);
 void CAN_Tx_Process(void);
 void CAN_Rx_Process(void);
+void Clear_ProtectionFlag(void);
 
 float	BPack_Temp,
 		BPack_Capacity,
 		BPack_Voltage,
-		BPack_Current;
+		BPack_Current,
+		BPack_SOH,
+		BPack_SOC;
 
 union 	uint16t_byte {
 		uint16_t m_uint16t;

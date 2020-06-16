@@ -134,7 +134,8 @@ uint8_t		Flag_ChargerOverVoltage,
 			Flag_ChargerUnderTemperature,
 			Flag_ChargerShortCircuit,
 			Flag_ChargerOverCurrent,
-			Flag_ChargerLostCommunication,
+			Flag_BMS_LostCommunication,
+			Flag_MiniPC_LostCommunication,
 			Flag_InputUnderVoltage,
 			Flag_InputOverVoltage;
 
@@ -156,18 +157,12 @@ uint8_t 	flag_trip_overtemperature,
 uint8_t		charge_state,
 			discharge_state,
 			sleep_state,
-			Communication_Flag,
+			Communication_BMS_Flag,
+			Communication_MiniPC_Flag,
 			Handshaking,
 			identified,
-			Start_Charge;
-
-float 		BP_Voltage,
-			BP_Capacity,
-			BP_Current,
-			BP_Cycle,
-			BP_Temp,
-			BP_SOC,
-			BP_SOH;
+			Start_Charge,
+			reset;
 
 /* USER CODE END Private defines */
 

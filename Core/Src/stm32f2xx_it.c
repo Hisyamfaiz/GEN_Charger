@@ -78,13 +78,12 @@ float		OFFSET_CurrentSense;
 float		TripTime_OverCurrent,
 			Count_TripTime;
 
-uint8_t		SetProtection_ShortCircuit = 20;//Setting current protection
+uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 7;	//Setting current protection
-uint8_t		SetProtection_OverVoltage = 65;	//Setting voltage protection
-uint8_t		SetProtection_Temp2 = 60; 	//Setting inductor Temperature protection
-uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
+uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
+uint8_t		SetProtection_Temp2 = 50; 	//Setting inductor Temperature protection
+uint8_t		SetProtection_Temp1 = 50;	//Setting Mosfet & Diode Temperature protection
 
-void Clear_ProtectionFlag(void);
 
 /* USER CODE END EV */
 
@@ -225,31 +224,17 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles CAN1 RX1 interrupt.
+  * @brief This function handles CAN1 RX0 interrupts.
   */
-void CAN1_RX1_IRQHandler(void)
+void CAN1_RX0_IRQHandler(void)
 {
-  /* USER CODE BEGIN CAN1_RX1_IRQn 0 */
+  /* USER CODE BEGIN CAN1_RX0_IRQn 0 */
 
-  /* USER CODE END CAN1_RX1_IRQn 0 */
+  /* USER CODE END CAN1_RX0_IRQn 0 */
   HAL_CAN_IRQHandler(&hcan1);
-  /* USER CODE BEGIN CAN1_RX1_IRQn 1 */
+  /* USER CODE BEGIN CAN1_RX0_IRQn 1 */
 
-  /* USER CODE END CAN1_RX1_IRQn 1 */
-}
-
-/**
-  * @brief This function handles CAN1 SCE interrupt.
-  */
-void CAN1_SCE_IRQHandler(void)
-{
-  /* USER CODE BEGIN CAN1_SCE_IRQn 0 */
-
-  /* USER CODE END CAN1_SCE_IRQn 0 */
-  HAL_CAN_IRQHandler(&hcan1);
-  /* USER CODE BEGIN CAN1_SCE_IRQn 1 */
-
-  /* USER CODE END CAN1_SCE_IRQn 1 */
+  /* USER CODE END CAN1_RX0_IRQn 1 */
 }
 
 /**
@@ -322,23 +307,6 @@ void TIM2_IRQHandler(void)
 
 	if (Charger_Mode == 1){	//charge mode
 
-		if(	flag_trip_overvoltage == 1		||
-			flag_trip_overtemperature == 1	||
-			flag_trip_undertemperature == 1	||
-			flag_trip_overcurrentcharge == 1||
-			flag_trip_SOCOverCharge == 1	||
-			flag_trip_shortcircuit == 1		||
-			flag_trip_systemfailure == 1	||
-			Flag_ChargerShortCircuit == 1	||
-			Flag_ChargerOverCurrent == 1	||
-			Flag_ChargerOverTemperature == 1||
-			Flag_ChargerOverVoltage == 1	)
-			{
-				duty=0;
-				htim1.Instance->CCR1=duty*TIM1->ARR;
-				Charger_Mode = 2;
-			}
-
 		Fault_Check();
 		htim1.Instance->CCR1=duty*TIM1->ARR;
 		if(duty>=0.9)
@@ -364,8 +332,8 @@ void TIM2_IRQHandler(void)
 		duty=0;
 		dc=0;
 		htim1.Instance->CCR1=duty*TIM1->ARR;
-		Clear_ProtectionFlag();
-		Eror_Code = 0;
+//		Clear_ProtectionFlag();
+//		Eror_Code = 0;
 		OFFSET_CurrentSense = OFFSET_Calibration;
 	}
 
@@ -388,15 +356,35 @@ void TIM2_IRQHandler(void)
 		if (Flag_ChargerOverTemperature == 1 && Temp_T1<=(SetProtection_Temp1-10) && Temp_T2<=(SetProtection_Temp2-10) && L>5){
 			Flag_ChargerOverTemperature = 0;
 			dc=0; Charger_Mode =1;
+			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
+			HAL_GPIO_WritePin(GPIOB, Led1_Pin,0);
 		}
 
 		//Clearing Battery Over Temperature
 		if (flag_trip_overtemperature == 0 && LastFlag_OverTemperature == 1){
 			dc=0; Charger_Mode =1;
+			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
+			HAL_GPIO_WritePin(GPIOB, Led1_Pin,0);
 		}
 	}
 
 	Eror_CodeCheck();
+	if(	flag_trip_overvoltage == 1		||
+		flag_trip_overtemperature == 1	||
+		flag_trip_undertemperature == 1	||
+		flag_trip_overcurrentcharge == 1||
+		flag_trip_SOCOverCharge == 1	||
+		flag_trip_shortcircuit == 1		||
+		flag_trip_systemfailure == 1	||
+		Flag_ChargerShortCircuit == 1	||
+		Flag_ChargerOverCurrent == 1	||
+		Flag_ChargerOverTemperature == 1||
+		Flag_ChargerOverVoltage == 1	)
+		{
+			duty=0;
+			htim1.Instance->CCR1=duty*TIM1->ARR;
+			Charger_Mode = 2;
+		}
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -412,12 +400,19 @@ void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
 
-	if(!(Handshaking == 0 && identified == 1) ) CAN_Tx_Process();
+//	if(!(Handshaking == 0 && identified == 1) ) CAN_Tx_Process();
+	CAN_Tx_Process();
 
 	SS+=1;
-	if(SS >= 5 && Handshaking ==1){
-		if(Communication_Flag == 1) Communication_Flag = 0;
-		else Flag_ChargerLostCommunication = 1;
+	if(SS >= 50){
+
+		if(Communication_MiniPC_Flag == 1) Communication_MiniPC_Flag = 0;
+		else Flag_MiniPC_LostCommunication = 1;
+
+		if(Handshaking == 1){
+			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
+			else Flag_BMS_LostCommunication = 1;
+		}
 		SS = 0;
 	}
 
@@ -435,7 +430,7 @@ void TIM3_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-	CAN_Rx_Process();	//can receive handle
+//	CAN_Rx_Process();	//can receive handle
 
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
@@ -539,8 +534,10 @@ void Eror_CodeCheck(void)
 	else if (Flag_InputOverVoltage==1)
 		Eror_Code=21;	//Input Over Current
 
-	else if(Flag_ChargerLostCommunication==1)
+	else if(Flag_BMS_LostCommunication==1)
 		Eror_Code=22;
+	else if(Flag_MiniPC_LostCommunication==1)
+		Eror_Code=23;
 }
 
 void Clear_ProtectionFlag(void)
@@ -555,7 +552,8 @@ void Clear_ProtectionFlag(void)
 	Flag_ChargerOverCurrent = 0;
 	Flag_ChargerOverTemperature = 0;
 	Flag_ChargerOverVoltage = 0;
-	Flag_ChargerLostCommunication = 0;
+	Flag_MiniPC_LostCommunication = 0;
+	Flag_BMS_LostCommunication = 0;
 }
 
 void Fault_Check(void)
