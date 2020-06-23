@@ -10,13 +10,13 @@
 #include "Control_Init.h"
 
 //float oNH=-1, oNB=-0.5, oNM=-0.25, oNS=-0.15, oZ=0, oPS=0.15, oPM=0.25, oPB=0.5, oPH=1;
-float oNH=-0.05, oNB=-0.025, oNM=-0.01, oNS=-0.0075, oZ=0, oPS=0.0075, oPM=0.01, oPB=0.025, oPH=0.05;
-float SetPoint_CV = 61.5;
+//float oNH=-0.05, oNB=-0.025, oNM=-0.01, oNS=-0.0075, oZ=0, oPS=0.0075, oPM=0.01, oPB=0.025, oPH=0.05;
+float oNH=-0.1, oNB=-0.05, oNM=-0.025, oNS=-0.01, oZ=0, oPS=0.0075, oPM=0.01, oPB=0.025, oPH=0.05;
+float SetPoint_CV = MAX_CHARGE_VOLTAGE;
 extern float Voltage_Charger;
 
 void Constant_Voltage(void)
 {
-
 	sp=SetPoint_CV;
 	pv=Voltage_Charger;
 	e=sp-pv;
@@ -185,7 +185,7 @@ void Constant_Voltage(void)
 
 	dc=dc+step;
 
-	if(dc>=80)	dc=80;
+	if(dc>=85)	dc=85;
 	if(dc<=0)	dc=0;
 
 	duty = dc/100;
@@ -210,7 +210,9 @@ void Constant_Voltage(void)
 		Flag_ChargerShortCircuit == 1	||
 		Flag_ChargerOverCurrent == 1	||
 		Flag_ChargerOverTemperature == 1||
-		Flag_ChargerOverVoltage == 1	)
+		Flag_ChargerOverVoltage == 1	||
+		Flag_MiniPC_LostCommunication==1||
+		Flag_BMS_LostCommunication == 1  )
 		{
 			duty=0;
 			Charger_Mode = 2;

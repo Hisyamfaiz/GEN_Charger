@@ -68,7 +68,7 @@ void SystemClock_Config(void);
 uint8_t			z=0, data, EEPROM_data;
 char 			buffer_i2c[100];
 char 			usart_Tx_buffer[100];
-extern uint8_t	Eror_Code;
+extern uint8_t	Eror_Code,send;
 extern uint8_t	Rx_data[8];
 extern float 	dc;
 /* USER CODE END PFP */
@@ -91,7 +91,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -121,6 +121,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_Delay(500);
   Charger_Mode = 0;
+  flag_CHARGE_MODE=0;
   Eror_Code = 0;
   CHARGER_ON_Init();
   reset=0;
@@ -144,10 +145,12 @@ int main(void)
 	  else						Display_StanbyMode();
 
 	  if(flag_charge == 1 && Charger_Mode == 0){	// Deteksi perubahan state dari charge ke standby
+		  send=5;
 		  Ready_Handshaking = 0;					// Variable bantu untuk delay handshaking
 		  HAL_Delay(5000);
 		  Ready_Handshaking = 1;
 		  flag_charge = 0;
+//		  send = 0;
 	  }
 
 	  HAL_IWDG_Refresh(&hiwdg);
@@ -276,17 +279,25 @@ void Display_ChargeMode(void){
 	SSD1306_Fill (0);
 
 	sprintf(buffer_i2c, "Charger - RUN");
-	SSD1306_GotoXY (12,0);
+	SSD1306_GotoXY (3,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "D = %4.1f |%2d|%3d \r\n", dc, Batt_SOC.m_uint16t, reset);
+	if(flag_CHARGE_MODE == 0) sprintf(buffer_i2c, "(CC)");
+	else if(flag_CHARGE_MODE == 1) sprintf(buffer_i2c, "(CV)");
+	else sprintf(buffer_i2c, "(-)");
+
+	SSD1306_GotoXY (95,0);
+	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
+
+	sprintf(buffer_i2c, "D = %4.1f|%2d|%2.0f|%2.0f \r\n", dc, Batt_SOC.m_uint16t, BPack_Capacity, BPack_Temp);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
-	SSD1306_GotoXY (5,13);
+	SSD1306_GotoXY (3,13);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	if(Delay_USART == 1){
 	//sprintf(usart_Tx_buffer,"Test USART %d\r\n",(unsigned int)i);
 	sprintf(buffer_i2c,"%3.1f,%4.2f,%4.2f,%3d \r\n", duty, Voltage_Charger, Current_Charger, Batt_SOC.m_uint16t);
+//	sprintf(buffer_i2c,"%4.0f,%4.0f,%4.0f",ADC_Average_VoutP,ADC_Average_VoutN,ADC_VoltageResult);
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 	Delay_USART = 0;
@@ -295,25 +306,25 @@ void Display_ChargeMode(void){
 	HAL_Delay(10);
 
 	sprintf(buffer_i2c, "T = %4.1f | %4.1f", Temp_T1, Temp_T2);
-	SSD1306_GotoXY (5,23);
+	SSD1306_GotoXY (3,23);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	sprintf(buffer_i2c, "V = %4.0f | %4.2f", ADC_VoltageResult, Voltage_Charger);
-//	sprintf(buffer_i2c, "V = %4.0f | %4.0f", ADC_Average_VoutN, ADC_Average_VoutP);
-	SSD1306_GotoXY (5,33);
+//	sprintf(buffer_i2c,"%4.0f|%4.0f|%4.0f",ADC_Average_VoutP,ADC_Average_VoutN,ADC_VoltageResult);
+	SSD1306_GotoXY (3,33);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	sprintf(buffer_i2c, "A = %4.0f | %4.2f", ADC_Average_Iout, Current_Charger);
 	//(float)Batt_current.m_uint16t/100);
-	SSD1306_GotoXY (5,43);
+	SSD1306_GotoXY (3,43);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	sprintf(buffer_i2c, "E =%2d--%2d ", Eror_Code, LastEror_code);
-	SSD1306_GotoXY (5,53);
+	SSD1306_GotoXY (3,53);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	sprintf(buffer_i2c, "| %lx", UNIQUE_Code);
-	SSD1306_GotoXY (68,53);
+	SSD1306_GotoXY (66,53);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	SSD1306_UpdateScreen(); //display

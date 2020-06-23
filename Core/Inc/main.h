@@ -54,7 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+#define MAX_CHARGE_VOLTAGE 60.6
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -118,8 +118,10 @@ float		ADC_Average_Iin,
 
 float		Res_T1,
 			Res_T2,
+			Res_T3,
 			Temp_T1,
-			Temp_T2;
+			Temp_T2,
+			Temp_T3;
 
 float 		duty;
 
@@ -163,6 +165,8 @@ uint8_t		charge_state,
 			identified,
 			Start_Charge,
 			reset;
+
+uint8_t		flag_CHARGE_MODE;
 
 /* USER CODE END Private defines */
 

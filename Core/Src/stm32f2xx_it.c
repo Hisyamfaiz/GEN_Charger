@@ -81,8 +81,8 @@ float		TripTime_OverCurrent,
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 7;	//Setting current protection
 uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
-uint8_t		SetProtection_Temp2 = 50; 	//Setting inductor Temperature protection
-uint8_t		SetProtection_Temp1 = 50;	//Setting Mosfet & Diode Temperature protection
+uint8_t		SetProtection_Temp2 = 60; 	//Setting inductor Temperature protection
+uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
 
 
 /* USER CODE END EV */
@@ -285,7 +285,7 @@ void TIM2_IRQHandler(void)
 
 	//Voltage value calculation and calibration
 	ADC_VoltageResult = fabs (ADC_Average_VoutN - ADC_Average_VoutP);
-	Voltage_Charger = ADC_VoltageResult*0.0275-0.018;
+	Voltage_Charger = ADC_VoltageResult*0.042318765307477 - 0.240709805391821;
 	if(Voltage_Charger <= 0)
 		Voltage_Charger = 0;
 
@@ -312,13 +312,17 @@ void TIM2_IRQHandler(void)
 		if(duty>=0.9)
 			duty=0;
 
-		if(Batt_SOC.m_uint16t>70){
-			Constant_Voltage();
-		}
+		if(Voltage_Charger > MAX_CHARGE_VOLTAGE) flag_CHARGE_MODE = 1;
 
-		if(Batt_SOC.m_uint16t<=70){
-			Constant_Current();
-		}
+		if(flag_CHARGE_MODE == 0) Constant_Current();
+		else if(flag_CHARGE_MODE == 1) Constant_Voltage();
+
+//		if(Batt_SOC.m_uint16t>85){
+//		if(Voltage_Charger < MAX_BPACK_VOLTAGE){
+//			Constant_Current();
+//		}
+
+
 
 		//Clearing Charger Decrease rating flag
 		if (flag_Derating == 1 && Temp_T1<=(SetProtection_Temp1-15) && Temp_T2<=(SetProtection_Temp2-25)){
@@ -404,15 +408,15 @@ void TIM3_IRQHandler(void)
 	CAN_Tx_Process();
 
 	SS+=1;
-	if(SS >= 50){
+	if(SS >= 150){
 
-		if(Communication_MiniPC_Flag == 1) Communication_MiniPC_Flag = 0;
-		else Flag_MiniPC_LostCommunication = 1;
-
-		if(Handshaking == 1){
-			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
-			else Flag_BMS_LostCommunication = 1;
-		}
+//		if(Communication_MiniPC_Flag == 1) Communication_MiniPC_Flag = 0;
+//		else Flag_MiniPC_LostCommunication = 1;
+//
+//		if(Handshaking == 1){
+//			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
+//			else Flag_BMS_LostCommunication = 1;
+//		}
 		SS = 0;
 	}
 
@@ -488,11 +492,10 @@ void Eror_CodeCheck(void)
 	if (flag_trip_unbalance==1)
 			Eror_Code=6;	//Battery Pack imbalance
 
-	if (flag_trip_overtemperature==1){
+	else if (flag_trip_overtemperature==1){
 			Eror_Code=8;	//Battery Pack over temperature
 			LastFlag_OverTemperature = 1;
 		}
-
 	else if (flag_trip_undertemperature==1)
 			Eror_Code=9;	//Battery Pack under temperature
 
@@ -507,7 +510,6 @@ void Eror_CodeCheck(void)
 
 	else if (flag_trip_systemfailure==1)
 			Eror_Code=13;	//Battery Pack system failure
-
 
 
 	else if (Flag_ChargerUnderVoltage==1)
