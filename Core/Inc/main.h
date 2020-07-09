@@ -54,7 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-#define MAX_CHARGE_VOLTAGE 60.6
+#define MAX_CHARGE_VOLTAGE 60
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -164,9 +164,14 @@ uint8_t		charge_state,
 			Handshaking,
 			identified,
 			Start_Charge,
-			reset;
+			reset,
+			Ready_toCharge,
+			flag_Check_SOCawal;
 
-uint8_t		flag_CHARGE_MODE;
+uint8_t		flag_CHARGE_MODE,
+			send,
+			flag_FullCharge,
+			flag_ForceSwap;
 
 /* USER CODE END Private defines */
 

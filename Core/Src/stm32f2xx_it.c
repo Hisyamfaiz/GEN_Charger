@@ -77,9 +77,10 @@ uint16_t	Tbuzz=999;
 float		OFFSET_CurrentSense;
 float		TripTime_OverCurrent,
 			Count_TripTime;
+extern uint8_t check;
 
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
-uint8_t		SetProtection_OverCurrent = 7;	//Setting current protection
+uint8_t		SetProtection_OverCurrent = 7.5;	//Setting current protection
 uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
 uint8_t		SetProtection_Temp2 = 60; 	//Setting inductor Temperature protection
 uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
@@ -245,7 +246,6 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 0 */
 
 	// *********************** Sensing Process (ADC average) ******************************
-
 	ADC_SUM_Iin = ADC_SUM_Iin - ADC_Array_Iin[i];		//delete old data
 	ADC_SUM_VinN = ADC_SUM_VinN - ADC_Array_VinN[i];
 	ADC_SUM_VinP = ADC_SUM_VinP - ADC_Array_VinP[i];
@@ -306,7 +306,8 @@ void TIM2_IRQHandler(void)
 	// ***********************Charge or standby State ******************************
 
 	if (Charger_Mode == 1){	//charge mode
-
+		flag_FullCharge = 0;
+		flag_ForceSwap = 0;
 		Fault_Check();
 		htim1.Instance->CCR1=duty*TIM1->ARR;
 		if(duty>=0.9)
@@ -317,18 +318,25 @@ void TIM2_IRQHandler(void)
 		if(flag_CHARGE_MODE == 0) Constant_Current();
 		else if(flag_CHARGE_MODE == 1) Constant_Voltage();
 
-//		if(Batt_SOC.m_uint16t>85){
-//		if(Voltage_Charger < MAX_BPACK_VOLTAGE){
-//			Constant_Current();
-//		}
-
-
-
 		//Clearing Charger Decrease rating flag
 		if (flag_Derating == 1 && Temp_T1<=(SetProtection_Temp1-15) && Temp_T2<=(SetProtection_Temp2-25)){
 			flag_Derating = 0;
 		}
 
+		if(BPack_SOC>=100){
+//			check=15;
+			send = 0;
+			duty=0;
+			LastCharger_Mode = 0;
+			Charger_Mode = 0;
+			Ready_toCharge = 0;
+			flag_FullCharge = 1;
+			BPack_SOC=0;
+//			Handshaking = 0;
+//			UNIQUE_Code = 0;
+//			identified = 0;
+//			flag_Check_SOCawal = 0;
+		}
 		L=0; Tbuzz=999;
 	}
 
@@ -339,6 +347,7 @@ void TIM2_IRQHandler(void)
 //		Clear_ProtectionFlag();
 //		Eror_Code = 0;
 		OFFSET_CurrentSense = OFFSET_Calibration;
+
 	}
 
 	if(Charger_Mode == 2){	//Protection mode
@@ -359,16 +368,20 @@ void TIM2_IRQHandler(void)
 		//Clearing Charger Over Temperature
 		if (Flag_ChargerOverTemperature == 1 && Temp_T1<=(SetProtection_Temp1-10) && Temp_T2<=(SetProtection_Temp2-10) && L>5){
 			Flag_ChargerOverTemperature = 0;
+			flag_CHARGE_MODE = 0;
 			dc=0; Charger_Mode =1;
 			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
 			HAL_GPIO_WritePin(GPIOB, Led1_Pin,0);
+			flag_CHARGE_MODE = 0;
 		}
 
 		//Clearing Battery Over Temperature
 		if (flag_trip_overtemperature == 0 && LastFlag_OverTemperature == 1){
+			flag_CHARGE_MODE = 0;
 			dc=0; Charger_Mode =1;
 			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
 			HAL_GPIO_WritePin(GPIOB, Led1_Pin,0);
+			flag_CHARGE_MODE = 0;
 		}
 	}
 
@@ -408,15 +421,15 @@ void TIM3_IRQHandler(void)
 	CAN_Tx_Process();
 
 	SS+=1;
-	if(SS >= 150){
-
+	if(SS >= 50){
+//		check=0;
 //		if(Communication_MiniPC_Flag == 1) Communication_MiniPC_Flag = 0;
 //		else Flag_MiniPC_LostCommunication = 1;
 //
-//		if(Handshaking == 1){
-//			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
-//			else Flag_BMS_LostCommunication = 1;
-//		}
+		if(Handshaking == 1){
+			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
+			else Flag_BMS_LostCommunication = 1;
+		}
 		SS = 0;
 	}
 

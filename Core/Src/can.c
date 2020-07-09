@@ -31,8 +31,9 @@ uint8_t		Tx_data[8];
 uint32_t	TxMailbox;
 uint8_t		Rx_data[8];
 uint16_t	Wakeup_BPack_Delay=0;
-int			Delay_Charger=0;
-uint8_t		send;
+int			Delay_Charger=0,
+			Delay_SWAP=0;
+uint8_t		check;
 
 /* USER CODE END 0 */
 
@@ -154,13 +155,14 @@ void CAN_Setting(void)
 void CAN_Tx_Process(void)
 {
 	if(!(Handshaking == 0 && identified == 1) ){
+//		check = 1;
 		Tx_Header.StdId = 0x0C1;
 		Tx_data[0] = UNIQUE_Code >> 16;
 		Tx_data[1] = UNIQUE_Code >> 8;
 		Tx_data[2] = UNIQUE_Code;
 		Tx_data[3] = Eror_Code;
 		Tx_data[4] = Handshaking;
-		Tx_data[5] = 0;
+		Tx_data[5] = Ready_toCharge;
 		Tx_data[6] = 0;
 		Tx_data[7] = 0;
 
@@ -259,23 +261,45 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				Start_Charge = Rx_data[0];
 				Communication_MiniPC_Flag = 1;
 
-				if(Rx_data[0] == 1 && LastCharger_Mode == 0 ){
+				if(Rx_data[0] == 1 && LastCharger_Mode == 0 && Ready_toCharge == 1 ){
 					Charger_Mode = Start_Charge;
 					LastCharger_Mode = 1;
 					send = 4;
 				}
 
 				else if(Start_Charge == 0 && LastCharger_Mode == 1 ){
-					send = 5;
-					Charger_Mode = Start_Charge;
-					Clear_ProtectionFlag();
-					Eror_Code = 0;
+					flag_ForceSwap = 1;
 					Handshaking = 0;
 					UNIQUE_Code = 0;
 					LastCharger_Mode = 0;
 					identified = 0;
-					send = 5;
+					Ready_toCharge = 0;
+					flag_Check_SOCawal = 0;
+
+					Charger_Mode = Start_Charge;
+					Clear_ProtectionFlag();
+					Eror_Code = 0;
 				}
+
+				else if(Start_Charge == 0 && flag_FullCharge == 1){
+					send = 5;
+					check = 12;
+
+					Delay_SWAP +=1;
+					if(Delay_SWAP >= 10){
+						Handshaking = 0;
+						UNIQUE_Code = 0;
+						LastCharger_Mode = 0;
+						identified = 0;
+						Ready_toCharge = 0;
+						flag_Check_SOCawal = 0;
+						send = 0;
+						Delay_SWAP = 0;
+						BPack_SOC = 0;
+						flag_FullCharge = 0;
+					}
+				}
+
 				Rx_Header.StdId = 0;
 			}
 
@@ -294,8 +318,21 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 				BPack_Temp = (Batt_temp.m_uint16t/10)-40;
 				BPack_Voltage = Batt_voltage.m_uint16t/100;
-				BPack_SOC = Batt_SOC.m_uint16t;
+				BPack_SOC = (float)Batt_SOC.m_uint16t/100;
 				BPack_Current = (Batt_current.m_uint16t/100)-50;
+
+				if(BPack_SOC < 90 && flag_Check_SOCawal != 1) {
+					Ready_toCharge = 1;
+					flag_Check_SOCawal = 1;
+				}
+				else if(BPack_SOC >= 90 && flag_Check_SOCawal != 1) {
+					Ready_toCharge = 0;
+					flag_Check_SOCawal = 1;
+				}
+
+				if(Ready_toCharge == 0 && flag_Check_SOCawal != 0){
+					if(BPack_SOC < 70) Ready_toCharge = 1;
+				}
 			}
 
 			// CAN ID receive #2 (0x7b2)

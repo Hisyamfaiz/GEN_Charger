@@ -12,7 +12,7 @@
 //float oNH=-1, oNB=-0.5, oNM=-0.25, oNS=-0.15, oZ=0, oPS=0.15, oPM=0.25, oPB=0.5, oPH=1;
 //float oNH=-0.05, oNB=-0.025, oNM=-0.01, oNS=-0.0075, oZ=0, oPS=0.0075, oPM=0.01, oPB=0.025, oPH=0.05;
 float oNH=-0.1, oNB=-0.05, oNM=-0.025, oNS=-0.01, oZ=0, oPS=0.0075, oPM=0.01, oPB=0.025, oPH=0.05;
-float SetPoint_CV = MAX_CHARGE_VOLTAGE;
+float SetPoint_CV = MAX_CHARGE_VOLTAGE-0.1;
 extern float Voltage_Charger;
 
 void Constant_Voltage(void)
