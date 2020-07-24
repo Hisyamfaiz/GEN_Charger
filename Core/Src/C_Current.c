@@ -32,10 +32,10 @@ void Constant_Current()
 		if(BPack_Temp >= 20 && BPack_Temp < 30) // Temperature 20 ~ 30
 			SetPoint_CC = 0.7*CC_Value;
 
-		if(BPack_Temp >= 30 && BPack_Temp <= 55)
+		if(BPack_Temp >= 30 && BPack_Temp <= 60)
 			SetPoint_CC = CC_Value;
 
-		if(BPack_Temp > 65)
+		if(BPack_Temp > 72)
 			SetPoint_CC = 0.5*CC_Value;
 	}
 
@@ -214,12 +214,12 @@ void Constant_Current()
 
 	duty = dc/100;
 
-	if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1 && Eror_Code==0){
-		Charger_Mode = 0;
-		Handshaking = 0;
-		identified = 0;
-		UNIQUE_Code = 0;
-	}
+//	if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1 && Eror_Code==0){
+//		Charger_Mode = 0;
+//		Handshaking = 0;
+//		identified = 0;
+//		UNIQUE_Code = 0;
+//	}
 //	if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1 && Eror_Code==0){
 //			  duty=duty+0.1;
 //			  HAL_GPIO_WritePin(GPIOC, Buzzer_Pin,1);

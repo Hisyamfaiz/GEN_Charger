@@ -23,6 +23,8 @@
 /* USER CODE BEGIN 0 */
 #include "main.h"
 #include "string.h"
+#include "stdlib.h"
+#include <ctype.h>
 
 extern CAN_TxHeaderTypeDef	Tx_Header;
 extern CAN_RxHeaderTypeDef 	Rx_Header;
@@ -154,9 +156,11 @@ void CAN_Setting(void)
 
 void CAN_Tx_Process(void)
 {
-	if(!(Handshaking == 0 && identified == 1) ){
+	if(!(Handshaking == 0 && identified == 1 )){
 //		check = 1;
-		Tx_Header.StdId = 0x0C1;
+		Tx_Header.IDE = CAN_ID_STD;
+		Tx_Header.StdId = 0x0C0|HOLE;
+		Tx_Header.DLC = 8;
 		Tx_data[0] = UNIQUE_Code >> 16;
 		Tx_data[1] = UNIQUE_Code >> 8;
 		Tx_data[2] = UNIQUE_Code;
@@ -165,12 +169,13 @@ void CAN_Tx_Process(void)
 		Tx_data[5] = Ready_toCharge;
 		Tx_data[6] = 0;
 		Tx_data[7] = 0;
-
+		while(!HAL_CAN_GetTxMailboxesFreeLevel(&hcan1));
 		if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 	}
 
-	if(send == 0 || send == 1 || send == 2 || send == 5){
+	if((send == 0 || send == 1 || send == 2 || send == 5 || send == 6) && HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
 		if(send == 0){
+			Tx_Header.IDE = CAN_ID_STD;
 			Tx_Header.StdId = 0x1B2;
 			Tx_data[0] = 0;
 			Tx_data[1] = 0;
@@ -187,6 +192,7 @@ void CAN_Tx_Process(void)
 		}
 
 		else if(send == 1){
+			Tx_Header.IDE = CAN_ID_STD;
 			Tx_Header.StdId = 0x0E2;
 			Tx_data[0] = 0;
 			Tx_data[1] = 0;
@@ -202,6 +208,7 @@ void CAN_Tx_Process(void)
 		}
 
 		else if(send == 2){
+			Tx_Header.IDE = CAN_ID_STD;
 			Tx_Header.StdId = 0x0E2;
 			Tx_data[0] = 0;
 			Tx_data[1] = 0;
@@ -216,8 +223,18 @@ void CAN_Tx_Process(void)
 		}
 
 		else if(send == 5){
-			Tx_Header.StdId = 0x1B2;
+			Tx_Header.IDE = CAN_ID_EXT;
+			Tx_Header.ExtId = (0x1B2<<20)|LAST_UNIQUE_Code;
 			memset(Tx_data, 0, 8*sizeof(Tx_data[0]));
+			while(!HAL_CAN_GetTxMailboxesFreeLevel(&hcan1));
+			if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+		}
+
+		else if(send == 6){
+			Tx_Header.IDE = CAN_ID_EXT;
+			Tx_Header.ExtId = (0x1B2<<20)|LAST_UNIQUE_Code;
+			memset(Tx_data, 0, 8*sizeof(Tx_data[0]));
+			Tx_data[7] = 0x01;
 			while(!HAL_CAN_GetTxMailboxesFreeLevel(&hcan1));
 			if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 		}
@@ -225,7 +242,7 @@ void CAN_Tx_Process(void)
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK){
+	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK && HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
 		HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 		//	Communication_Flag = 1;
 
@@ -237,7 +254,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 		if(Handshaking==0 && Ready_Handshaking == 1){
 
 			if(identified <= 0){
-					send = 0;
+				send = 0;
 			}
 
 			// CAN ID receive (Handshaking)
@@ -251,6 +268,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 					send = 2;
 					UNIQUE_Code = Rx_Header.ExtId & 0x000FFFFF;
 					Handshaking=1;
+					itoa(UNIQUE_Code, lower_UNIQUE_Code, 16);
+					int ii=0;
+					while(ii<6){
+						UPPER_UNIQUE_Code[ii] = toupper(lower_UNIQUE_Code[ii]);
+						ii++;
+					}
 				}
 			}
 		}
@@ -258,10 +281,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 		else if(Handshaking==1){
 
 			if(Rx_Header.StdId == 0x1C0){
-				Start_Charge = Rx_data[0];
+				Start_Charge = Rx_data[HOLE-1];
 				Communication_MiniPC_Flag = 1;
 
-				if(Rx_data[0] == 1 && LastCharger_Mode == 0 && Ready_toCharge == 1 ){
+				if(Rx_data[HOLE-1] == 1 && LastCharger_Mode == 0 && Ready_toCharge == 1 ){
 					Charger_Mode = Start_Charge;
 					LastCharger_Mode = 1;
 					send = 4;
@@ -270,6 +293,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				else if(Start_Charge == 0 && LastCharger_Mode == 1 ){
 					flag_ForceSwap = 1;
 					Handshaking = 0;
+					LAST_UNIQUE_Code = UNIQUE_Code;
 					UNIQUE_Code = 0;
 					LastCharger_Mode = 0;
 					identified = 0;
@@ -283,8 +307,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 				else if(Start_Charge == 0 && flag_FullCharge == 1){
 					send = 5;
-					check = 12;
-
 					Delay_SWAP +=1;
 					if(Delay_SWAP >= 10){
 						Handshaking = 0;
@@ -412,6 +434,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			}
 		}
 				// ******************************End Cell  Voltage Data Send**************************************
+		Rx_Header.ExtId = 0;
+		Rx_Header.StdId = 0;
+		memset(Rx_data, 0, 8*sizeof(Rx_data[0]));
 	}
 }
 

@@ -31,7 +31,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-#define maxdata 100
+#define maxdata 200
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -78,6 +78,9 @@ float		OFFSET_CurrentSense;
 float		TripTime_OverCurrent,
 			Count_TripTime;
 extern uint8_t check;
+
+uint8_t		Time_Ah=0;
+float		SUM_Ah;
 
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 7.5;	//Setting current protection
@@ -310,8 +313,8 @@ void TIM2_IRQHandler(void)
 		flag_ForceSwap = 0;
 		Fault_Check();
 		htim1.Instance->CCR1=duty*TIM1->ARR;
-		if(duty>=0.9)
-			duty=0;
+//		if(duty>=0.85)
+//			duty=0.85;
 
 		if(Voltage_Charger > MAX_CHARGE_VOLTAGE) flag_CHARGE_MODE = 1;
 
@@ -325,7 +328,8 @@ void TIM2_IRQHandler(void)
 
 		if(BPack_SOC>=100){
 //			check=15;
-			send = 0;
+			LAST_UNIQUE_Code = UNIQUE_Code;
+			send = 6;
 			duty=0;
 			LastCharger_Mode = 0;
 			Charger_Mode = 0;
@@ -346,6 +350,7 @@ void TIM2_IRQHandler(void)
 		htim1.Instance->CCR1=duty*TIM1->ARR;
 //		Clear_ProtectionFlag();
 //		Eror_Code = 0;
+		Ah_CONSUMPTION = 0;
 		OFFSET_CurrentSense = OFFSET_Calibration;
 
 	}
@@ -358,12 +363,12 @@ void TIM2_IRQHandler(void)
 			Tbuzz=0; L+=1;
 		}
 
-		if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
-			HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
-			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
-			Clear_ProtectionFlag();
-			dc=0; Charger_Mode =1;
-		}
+//		if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
+//			HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
+//			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
+//			Clear_ProtectionFlag();
+//			dc=0; Charger_Mode =1;
+//		}
 
 		//Clearing Charger Over Temperature
 		if (Flag_ChargerOverTemperature == 1 && Temp_T1<=(SetProtection_Temp1-10) && Temp_T2<=(SetProtection_Temp2-10) && L>5){
@@ -396,7 +401,9 @@ void TIM2_IRQHandler(void)
 		Flag_ChargerShortCircuit == 1	||
 		Flag_ChargerOverCurrent == 1	||
 		Flag_ChargerOverTemperature == 1||
-		Flag_ChargerOverVoltage == 1	)
+		Flag_ChargerOverVoltage == 1	||
+		Flag_MiniPC_LostCommunication==1||
+		Flag_BMS_LostCommunication == 1)
 		{
 			duty=0;
 			htim1.Instance->CCR1=duty*TIM1->ARR;
@@ -433,6 +440,15 @@ void TIM3_IRQHandler(void)
 		SS = 0;
 	}
 
+	if (Charger_Mode == 1){
+		Time_Ah++;
+		SUM_Ah += Current_Charger;
+		if(Time_Ah == 10){
+			Ah_CONSUMPTION = Ah_CONSUMPTION + (SUM_Ah*1000/10/3600); //1000 mAh, 1/10 Hz, 3600 secon
+			SUM_Ah = 0;
+			Time_Ah = 0;
+		}
+	}
 	Delay_USART = 1;
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);

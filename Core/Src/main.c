@@ -92,7 +92,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-      HAL_Init();
+	HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -146,12 +146,12 @@ int main(void)
 	  else						Display_StanbyMode();
 
 	  if(flag_charge == 1 && Charger_Mode == 0){	// Deteksi perubahan state dari charge ke standby
-		  if(flag_FullCharge == 1) send=0;
+		  if(flag_FullCharge == 1) send=6;
 		  if(flag_ForceSwap == 1) send=5;
 
 		  Ready_Handshaking = 0;					// Variable bantu untuk delay handshaking
 		  Delay_ForceSWAP += 1;
-		  if(Delay_ForceSWAP >= 1000){
+		  if(Delay_ForceSWAP >= 300){
 			  Ready_Handshaking = 1;
 			  flag_charge = 0;
 			  Delay_ForceSWAP = 0;
@@ -289,7 +289,7 @@ void Display_ProtectionMode(void){
 void Display_ChargeMode(void){
 	SSD1306_Fill (0);
 
-	sprintf(buffer_i2c, "Charger - RUN");
+	sprintf(buffer_i2c, "HOLE-%d :",HOLE);
 	SSD1306_GotoXY (3,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
@@ -300,6 +300,10 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (95,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
+	sprintf(buffer_i2c, "%s", UPPER_UNIQUE_Code);
+	SSD1306_GotoXY (60,0);
+	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
+
 	sprintf(buffer_i2c, "D = %3.1f|%3.1f|%3.1f \r\n", dc, BPack_SOC, BPack_Temp);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
 	SSD1306_GotoXY (3,13);
@@ -307,7 +311,7 @@ void Display_ChargeMode(void){
 
 	if(Delay_USART == 1){
 	//sprintf(usart_Tx_buffer,"Test USART %d\r\n",(unsigned int)i);
-	sprintf(buffer_i2c,"%3.1f,%4.2f,%4.2f,%4.2f \r\n", duty, Voltage_Charger, Current_Charger, BPack_SOC);
+	sprintf(buffer_i2c,"%4.3f,%4.2f,%4.2f,%4.2f,%4.0f \r\n", duty, Voltage_Charger, Current_Charger, BPack_SOC, Ah_CONSUMPTION);
 //	sprintf(buffer_i2c,"%4.0f,%4.0f,%4.0f",ADC_Average_VoutP,ADC_Average_VoutN,ADC_VoltageResult);
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
@@ -334,8 +338,8 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (3,53);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "| %lx", UNIQUE_Code);
-	SSD1306_GotoXY (66,53);
+	sprintf(buffer_i2c, "%4.0f", Ah_CONSUMPTION);
+	SSD1306_GotoXY (80,53);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	SSD1306_UpdateScreen(); //display

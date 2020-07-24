@@ -54,7 +54,8 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-#define MAX_CHARGE_VOLTAGE 60
+#define MAX_CHARGE_VOLTAGE 60.4
+#define HOLE 1
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -86,8 +87,8 @@ uint16_t 	ADC_temp1;
 uint16_t 	ADC_temp2;
 uint8_t		Eror_Code,
 			LastEror_code;
-uint32_t	UNIQUE_Code;
-
+uint32_t	UNIQUE_Code, LAST_UNIQUE_Code;
+int oke;
 int			ADC_SUM_Iin,
 			ADC_SUM_VinN,
 			ADC_SUM_VinP,
@@ -96,12 +97,12 @@ int			ADC_SUM_Iin,
 			ADC_SUM_VoutP,
 			Delay_USART;
 
-uint16_t	ADC_Array_Iin[100],
-			ADC_Array_VinN[100],
-			ADC_Array_VinP[100],
-			ADC_Array_Iout[100],
-			ADC_Array_VoutN[100],
-			ADC_Array_VoutP[100];
+uint16_t	ADC_Array_Iin[200],
+			ADC_Array_VinN[200],
+			ADC_Array_VinP[200],
+			ADC_Array_Iout[200],
+			ADC_Array_VoutN[200],
+			ADC_Array_VoutP[200];
 
 float		ADC_Average_Iin,
 			ADC_Average_VinN,
@@ -172,6 +173,11 @@ uint8_t		flag_CHARGE_MODE,
 			send,
 			flag_FullCharge,
 			flag_ForceSwap;
+
+float		Ah_CONSUMPTION;
+
+char		UPPER_UNIQUE_Code[10],
+			lower_UNIQUE_Code[10];
 
 /* USER CODE END Private defines */
 
