@@ -54,7 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-#define MAX_CHARGE_VOLTAGE 60.4
+#define MAX_CHARGE_VOLTAGE 62.3
 #define HOLE 1
 /* USER CODE END EFP */
 

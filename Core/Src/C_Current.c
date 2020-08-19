@@ -134,13 +134,13 @@ void Constant_Current()
 
 	/////////////////////inferensi///////////////////////
 
-	r1=dPB; if(eNB<dPB) r1=eNB;		//max(dPB,eNB);
-	r2=dPB; if(eNM<dPB) r2=eNM;
-	r3=dPB; if(eNS<dPB) r3=eNS;
-	r4=dPB; if(eZ<dPB) r4=eZ;
-	r5=dPB; if(ePS<dPB) r5=ePS;
-	r6=dPB; if(ePM<dPB) r6=ePM;
-	r7=dPB; if(ePB<dPB) r7=ePB;
+	r1=dPB; if(eNB<dPB) r1=eNB;		//r1=max(dPB,eNB);
+	r2=dPB; if(eNM<dPB) r2=eNM;		//r2=max(dPB,eNM);
+	r3=dPB; if(eNS<dPB) r3=eNS;		//r3=max(dPB,eNS);
+	r4=dPB; if(eZ<dPB) r4=eZ;		//r4=max(dPB,eZ);
+	r5=dPB; if(ePS<dPB) r5=ePS;		//r5=max(dPB,ePS);
+	r6=dPB; if(ePM<dPB) r6=ePM;		//r6=max(dPB,ePM);
+	r7=dPB; if(ePB<dPB) r7=ePB;		//r7=max(dPB,ePB);
 
 
 	r8=dPM; if(eNB<dPM) r8=eNB;		//r8=max(dPM,eNB);
@@ -207,8 +207,8 @@ void Constant_Current()
 
 	dc=dc+step;
 
-	if(dc>=85)
-		dc=85;
+	if(dc>=88)
+		dc=88;
 	if(dc<=0)
 		dc=0;
 

@@ -245,9 +245,7 @@ void CHARGER_ON_Init(void)
 	SSD1306_Fill(SSD1306_COLOR_BLACK);
 	SSD1306_UpdateScreen();
 
-
 	CAN_Setting();
-//	HAL_CAN_IRQHandler(&hcan1);
 
 	SSD1306_GotoXY (15,10);
 	SSD1306_Puts ("GEN-I Charger", &Font_7x10, 1);
@@ -310,7 +308,6 @@ void Display_ChargeMode(void){
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	if(Delay_USART == 1){
-	//sprintf(usart_Tx_buffer,"Test USART %d\r\n",(unsigned int)i);
 	sprintf(buffer_i2c,"%4.3f,%4.2f,%4.2f,%4.2f,%4.0f \r\n", duty, Voltage_Charger, Current_Charger, BPack_SOC, Ah_CONSUMPTION);
 //	sprintf(buffer_i2c,"%4.0f,%4.0f,%4.0f",ADC_Average_VoutP,ADC_Average_VoutN,ADC_VoltageResult);
 	HAL_UART_Transmit_IT(&huart3, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
@@ -330,7 +327,6 @@ void Display_ChargeMode(void){
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
 	sprintf(buffer_i2c, "A = %4.0f | %4.2f", ADC_Average_Iout, Current_Charger);
-	//(float)Batt_current.m_uint16t/100);
 	SSD1306_GotoXY (3,43);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 

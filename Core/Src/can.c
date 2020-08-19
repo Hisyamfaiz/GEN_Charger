@@ -244,7 +244,6 @@ void CAN_Tx_Process(void)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK && HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
 		HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
-		//	Communication_Flag = 1;
 
 		if(Handshaking == 0){
 			if(Rx_Header.StdId == 0x1C0)
@@ -343,11 +342,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				BPack_SOC = (float)Batt_SOC.m_uint16t/100;
 				BPack_Current = (Batt_current.m_uint16t/100)-50;
 
-				if(BPack_SOC < 90 && flag_Check_SOCawal != 1) {
+				if(BPack_SOC < 100 && flag_Check_SOCawal != 1) {
 					Ready_toCharge = 1;
 					flag_Check_SOCawal = 1;
 				}
-				else if(BPack_SOC >= 90 && flag_Check_SOCawal != 1) {
+				else if(BPack_SOC >= 100 && flag_Check_SOCawal != 1) {
 					Ready_toCharge = 0;
 					flag_Check_SOCawal = 1;
 				}

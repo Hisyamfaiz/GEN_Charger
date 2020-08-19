@@ -326,7 +326,7 @@ void TIM2_IRQHandler(void)
 			flag_Derating = 0;
 		}
 
-		if(BPack_SOC>=100){
+		if(BPack_SOC>=100 || (Current_Charger < (0.02*BPack_Capacity) && flag_CHARGE_MODE == 1)) {
 //			check=15;
 			LAST_UNIQUE_Code = UNIQUE_Code;
 			send = 6;
@@ -427,17 +427,17 @@ void TIM3_IRQHandler(void)
 //	if(!(Handshaking == 0 && identified == 1) ) CAN_Tx_Process();
 	CAN_Tx_Process();
 
-	SS+=1;
-	if(SS >= 50){
-//		check=0;
-//		if(Communication_MiniPC_Flag == 1) Communication_MiniPC_Flag = 0;
-//		else Flag_MiniPC_LostCommunication = 1;
-//
-		if(Handshaking == 1){
+	if(Handshaking == 1){
+		SS+=1;
+		if(SS >= 50){
 			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
 			else Flag_BMS_LostCommunication = 1;
+			SS = 0;
+//			check=0;
+//			if(Communication_MiniPC_Flag == 1) Communication_MiniPC_Flag = 0;
+//			else Flag_MiniPC_LostCommunication = 1;
+//
 		}
-		SS = 0;
 	}
 
 	if (Charger_Mode == 1){
