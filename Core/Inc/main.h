@@ -55,7 +55,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 #define MAX_CHARGE_VOLTAGE 62.3
-#define HOLE 1
+#define HOLE 6
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

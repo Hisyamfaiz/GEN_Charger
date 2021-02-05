@@ -31,6 +31,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+//tess
 #include "ssd1306.h"
 #include "i2c-lcd.h"
 #include "stdio.h"
@@ -135,6 +136,7 @@ int main(void)
 
   while (1)
   {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -270,6 +272,7 @@ void Display_StanbyMode(void){
 	SSD1306_GotoXY (20,30);
 	SSD1306_Puts ("STANBY-Mode", &Font_7x10, 1);
 	SSD1306_UpdateScreen(); //display
+	HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
 }
 
 void Display_ProtectionMode(void){
@@ -302,7 +305,7 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (60,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "D = %3.1f|%3.1f|%3.1f \r\n", dc, BPack_SOC, BPack_Temp);
+	sprintf(buffer_i2c, ">> %4.1f|%4.1f|%4.1f \r\n", dc, BPack_SOC, BPack_Temp);
 //	sprintf(buffer_i2c, "D = %4.1f | %4d   \r\n", dc, EEPROM_ReadData(10));
 	SSD1306_GotoXY (3,13);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
@@ -321,12 +324,12 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (3,23);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "V = %4.0f | %4.2f", ADC_VoltageResult, Voltage_Charger);
+	sprintf(buffer_i2c, "V = %4.0f | %5.2f", ADC_VoltageResult, Voltage_Charger);
 //	sprintf(buffer_i2c,"%4.0f|%4.0f|%4.0f",ADC_Average_VoutP,ADC_Average_VoutN,ADC_VoltageResult);
 	SSD1306_GotoXY (3,33);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "A = %4.0f | %4.2f", ADC_Average_Iout, Current_Charger);
+	sprintf(buffer_i2c, "A = %4.0f | %5.2f", ADC_Average_Iout, Current_Charger);
 	SSD1306_GotoXY (3,43);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
@@ -334,7 +337,7 @@ void Display_ChargeMode(void){
 	SSD1306_GotoXY (3,53);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "%4.0f", Ah_CONSUMPTION);
+	sprintf(buffer_i2c, "%5.0f", Ah_CONSUMPTION);
 	SSD1306_GotoXY (80,53);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 

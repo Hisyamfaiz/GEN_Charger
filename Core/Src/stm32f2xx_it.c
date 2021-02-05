@@ -85,8 +85,9 @@ float		SUM_Ah;
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 7.5;	//Setting current protection
 uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
-uint8_t		SetProtection_Temp2 = 60; 	//Setting inductor Temperature protection
+uint8_t		SetProtection_Temp2 = 65; 	//Setting inductor Temperature protection
 uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
+uint16_t	delay_clearing_overtemp;
 
 
 /* USER CODE END EV */
@@ -382,11 +383,15 @@ void TIM2_IRQHandler(void)
 
 		//Clearing Battery Over Temperature
 		if (flag_trip_overtemperature == 0 && LastFlag_OverTemperature == 1){
-			flag_CHARGE_MODE = 0;
-			dc=0; Charger_Mode =1;
-			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
-			HAL_GPIO_WritePin(GPIOB, Led1_Pin,0);
-			flag_CHARGE_MODE = 0;
+			delay_clearing_overtemp ++;
+			if(delay_clearing_overtemp >= 1500) {
+				flag_CHARGE_MODE = 0;
+				dc=0; Charger_Mode =1;
+				HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
+				HAL_GPIO_WritePin(GPIOB, Led1_Pin,0);
+				flag_CHARGE_MODE = 0;
+				delay_clearing_overtemp = 0;
+			}
 		}
 	}
 
