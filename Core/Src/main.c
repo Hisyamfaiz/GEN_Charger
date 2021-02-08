@@ -15,9 +15,9 @@
   *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
+  CAN-RS485
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
@@ -31,7 +31,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//tess rs485
+
 #include "ssd1306.h"
 #include "i2c-lcd.h"
 #include "stdio.h"
@@ -73,6 +73,7 @@ extern uint8_t	Eror_Code,send;
 extern uint8_t	Rx_data[8];
 extern float 	dc;
 int 			Delay_ForceSWAP = 0;
+uint8_t			buffer_serial;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -93,7 +94,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -133,6 +134,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   EEPROM_isDeviceReady(0XA0);
   EEPROM_WriteData(10, 15);
+  HAL_UART_Receive_IT(&huart1, &buffer_serial, 1);
 
   while (1)
   {
@@ -174,7 +176,8 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -190,7 +193,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -273,6 +276,10 @@ void Display_StanbyMode(void){
 	SSD1306_Puts ("STANBY-Mode", &Font_7x10, 1);
 	SSD1306_UpdateScreen(); //display
 	HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
+
+	sprintf(buffer_i2c," RS485 TEST %4.3f,%4.2f,%4.2f,%4.2f,%4.0f \r\n", duty, Voltage_Charger, Current_Charger, BPack_SOC, Ah_CONSUMPTION);
+	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
+	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 }
 
 void Display_ProtectionMode(void){
@@ -313,8 +320,8 @@ void Display_ChargeMode(void){
 	if(Delay_USART == 1){
 	sprintf(buffer_i2c,"%4.3f,%4.2f,%4.2f,%4.2f,%4.0f \r\n", duty, Voltage_Charger, Current_Charger, BPack_SOC, Ah_CONSUMPTION);
 //	sprintf(buffer_i2c,"%4.0f,%4.0f,%4.0f",ADC_Average_VoutP,ADC_Average_VoutN,ADC_VoltageResult);
-	HAL_UART_Transmit_IT(&huart3, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
-	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 	Delay_USART = 0;
 	}
 
@@ -368,7 +375,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

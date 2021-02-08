@@ -1,12 +1,12 @@
 /**
   ******************************************************************************
-  * File Name          : CAN.c
-  * Description        : This file provides code for the configuration
-  *                      of the CAN instances.
+  * @file    can.c
+  * @brief   This file provides code for the configuration
+  *          of the CAN instances.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -75,11 +75,11 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspInit 0 */
     /* CAN1 clock enable */
     __HAL_RCC_CAN1_CLK_ENABLE();
-  
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**CAN1 GPIO Configuration    
+    /**CAN1 GPIO Configuration
     PA11     ------> CAN1_RX
-    PA12     ------> CAN1_TX 
+    PA12     ------> CAN1_TX
     */
     GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -107,10 +107,10 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_CAN1_CLK_DISABLE();
-  
-    /**CAN1 GPIO Configuration    
+
+    /**CAN1 GPIO Configuration
     PA11     ------> CAN1_RX
-    PA12     ------> CAN1_TX 
+    PA12     ------> CAN1_TX
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
 
@@ -120,7 +120,7 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 
   /* USER CODE END CAN1_MspDeInit 1 */
   }
-} 
+}
 
 /* USER CODE BEGIN 1 */
 void CAN_Setting(void)
@@ -156,7 +156,38 @@ void CAN_Setting(void)
 
 void CAN_Tx_Process(void)
 {
-	if(!(Handshaking == 0 && identified == 1 )){
+	if(send == 1){	//wakeup the battery, but mosfet still open
+		Tx_Header.IDE = CAN_ID_EXT;
+		Tx_Header.StdId = 0x0E300000;
+		Tx_data[0] = 0x9C;
+		Tx_data[1] = 0x18;
+		Tx_data[2] = 0xf4;
+		Tx_data[3] = 0x01;
+		Tx_data[4] = 0;
+		Tx_data[5] = 0x55;
+		Tx_data[6] = 0;
+		Tx_data[7] = 0;
+		Tx_Header.DLC = 8;
+		while(!HAL_CAN_GetTxMailboxesFreeLevel(&hcan1));
+		if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+	}
+	else if(send == 2){	//close the mosfet, start charge
+		Tx_Header.IDE = CAN_ID_EXT;
+		Tx_Header.StdId = 0x0E300000;
+		Tx_data[0] = 0x9C;
+		Tx_data[1] = 0x18;
+		Tx_data[2] = 0xf4;
+		Tx_data[3] = 0x01;
+		Tx_data[4] = 0;
+		Tx_data[5] = 0xAA;
+		Tx_data[6] = 0;
+		Tx_data[7] = 0;
+		Tx_Header.DLC = 8;
+		while(!HAL_CAN_GetTxMailboxesFreeLevel(&hcan1));
+		if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
+	}
+}
+/*	if(!(Handshaking == 0 && identified == 1 )){
 //		check = 1;
 		Tx_Header.IDE = CAN_ID_STD;
 		Tx_Header.StdId = 0x0C0|HOLE;
@@ -239,12 +270,140 @@ void CAN_Tx_Process(void)
 			if(HAL_CAN_AddTxMessage(&hcan1, &Tx_Header, Tx_data, &TxMailbox)!= HAL_OK) Error_Handler();
 		}
 	}
-}
+}*/
+
+// HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1)
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data)== HAL_OK && HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
+	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data) == HAL_OK) {
 		HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 
+		if(Rx_Header.StdId == 0xBB){
+			if((Rx_data[2] & Rx_data[3]) == 0x40){
+				if(BPack_SOC < 85){
+					send = 2;	//send data to activate the mosfet
+				}
+			}
+
+			else if((Rx_data[2] & Rx_data[3]) == 0x43){
+				Ready_toCharge = 1;
+			}
+		}
+
+		// CAN ID receive #1 (0x7b1)
+		else if(Rx_Header.ExtId == (0x0B0<<20)){
+			UNIQUE_Code = Rx_Header.ExtId & 0x000FFFFF;
+			itoa(UNIQUE_Code, lower_UNIQUE_Code, 16);
+			int ii=0;
+			while(ii<6){
+				UPPER_UNIQUE_Code[ii] = toupper(lower_UNIQUE_Code[ii]);
+				ii++;
+			}
+
+			Communication_BMS_Flag = 1;
+			Batt_voltage.m_bytes[0] = Rx_data[0];
+			Batt_voltage.m_bytes[1] = Rx_data[1];
+			Batt_current.m_bytes[0] = Rx_data[2];
+			Batt_current.m_bytes[1] = Rx_data[3];
+			Batt_SOC.m_bytes[0] = Rx_data[4];
+			Batt_SOC.m_bytes[1] = Rx_data[5];
+			Batt_temp.m_bytes[0] = Rx_data[6];
+			Batt_temp.m_bytes[1] = Rx_data[7];
+
+			BPack_Temp = (Batt_temp.m_uint16t/10)-40;
+			BPack_Voltage = Batt_voltage.m_uint16t/100;
+			BPack_SOC = (float)Batt_SOC.m_uint16t/100;
+			BPack_Current = (Batt_current.m_uint16t/100)-50;
+
+		}
+
+		// CAN ID receive #2 (0x7b2)
+		else if(Rx_Header.ExtId == (0x0B1<<20)){
+			Communication_BMS_Flag = 1;
+			Batt_capacity.m_bytes[0] = Rx_data[0];
+			Batt_capacity.m_bytes[1] = Rx_data[1];
+			Batt_SOH.m_bytes[0] = Rx_data[2];
+			Batt_SOH.m_bytes[1] = Rx_data[3];
+			Batt_cycle.m_bytes[0] = Rx_data[4];
+			Batt_cycle.m_bytes[1] = Rx_data[5];
+
+			flag_trip_shortcircuit = Rx_data[6]&0x01;
+			flag_trip_overcurrentdischarge = (Rx_data[6]>>1)&0x01;
+			flag_trip_overcurrentcharge = (Rx_data[6]>>2)&0x01;
+			flag_trip_overtemperature = (Rx_data[6]>>3)&0x01;
+			flag_trip_undertemperature = (Rx_data[6]>>4)&0x01;
+			//flag_trip_overtemperature = (Rx_data[6]>>5)&0x01;
+			//flag_trip_undertemperature = (Rx_data[6]>>6)&0x01;
+			flag_trip_unbalance = (Rx_data[6]>>7)&0x01;
+			flag_trip_undervoltage = Rx_data[7]&0x01;
+			flag_trip_overvoltage = (Rx_data[7]<<1)&0x01;
+			flag_trip_SOCOverDischarge = (Rx_data[7]<<2)&0x01;
+			flag_trip_systemfailure = (Rx_data[7]<<3)&0x01;
+			charge_state = (Rx_data[7]<<4)&0x01;
+			discharge_state = (Rx_data[7]<<5)&0x01;
+			sleep_state = (Rx_data[7]<<6)&0x01;
+
+			BPack_byte6 = Rx_data[6];
+			BPack_byte7 = Rx_data[7];
+
+			BPack_Capacity = Batt_capacity.m_uint16t/100;
+			BPack_SOH = Batt_SOH.m_uint16t;
+			BPack_cycle = Batt_cycle.m_uint16t;
+		}
+
+
+		// *********************** Start Cell  Voltage Data Send ******************************
+		else if(Rx_Header.ExtId == (0x0B4<<20|UNIQUE_Code)){
+			vcell_15databyte[0].m_bytes[1] = Rx_data[0];
+			vcell_15databyte[0].m_bytes[0] = Rx_data[1];
+			vcell_15databyte[1].m_bytes[1] = Rx_data[2];
+			vcell_15databyte[1].m_bytes[0] = Rx_data[3];
+			vcell_15databyte[2].m_bytes[1] = Rx_data[4];
+			vcell_15databyte[2].m_bytes[0] = Rx_data[5];
+			vcell_15databyte[3].m_bytes[1] = Rx_data[6];
+			vcell_15databyte[3].m_bytes[0] = Rx_data[7];
+		}
+
+		else if(Rx_Header.ExtId == (0x0B5<<20|UNIQUE_Code)){
+			vcell_15databyte[4].m_bytes[1] = Rx_data[0];
+			vcell_15databyte[4].m_bytes[0] = Rx_data[1];
+			vcell_15databyte[5].m_bytes[1] = Rx_data[2];
+			vcell_15databyte[5].m_bytes[0] = Rx_data[3];
+			vcell_15databyte[6].m_bytes[1] = Rx_data[4];
+			vcell_15databyte[6].m_bytes[0] = Rx_data[5];
+			vcell_15databyte[7].m_bytes[1] = Rx_data[6];
+			vcell_15databyte[7].m_bytes[0] = Rx_data[7];
+		}
+
+		else if(Rx_Header.ExtId == (0x0B6<<20|UNIQUE_Code)){
+			vcell_15databyte[8].m_bytes[1] = Rx_data[0];
+			vcell_15databyte[8].m_bytes[0] = Rx_data[1];
+			vcell_15databyte[9].m_bytes[1] = Rx_data[2];
+			vcell_15databyte[9].m_bytes[0] = Rx_data[3];
+			vcell_15databyte[10].m_bytes[1] = Rx_data[4];
+			vcell_15databyte[10].m_bytes[0] = Rx_data[5];
+			vcell_15databyte[11].m_bytes[1] = Rx_data[6];
+			vcell_15databyte[11].m_bytes[0] = Rx_data[7];
+		}
+
+		else if(Rx_Header.ExtId == (0x0B7<<20|UNIQUE_Code)){
+			vcell_15databyte[12].m_bytes[1] = Rx_data[0];
+			vcell_15databyte[12].m_bytes[0] = Rx_data[1];
+			vcell_15databyte[13].m_bytes[1] = Rx_data[2];
+			vcell_15databyte[13].m_bytes[0] = Rx_data[3];
+			vcell_15databyte[14].m_bytes[1] = Rx_data[4];
+			vcell_15databyte[14].m_bytes[0] = Rx_data[5];
+			vcell_15databyte[15].m_bytes[1] = Rx_data[6];
+			vcell_15databyte[15].m_bytes[0] = Rx_data[7];
+		}
+			// ******************************End Cell  Voltage Data Send**************************************
+	Rx_Header.ExtId = 0;
+	Rx_Header.StdId = 0;
+	memset(Rx_data, 0, 8*sizeof(Rx_data[0]));
+	}
+}
+
+/*
 		if(Handshaking == 0){
 			if(Rx_Header.StdId == 0x1C0)
 				Communication_MiniPC_Flag = 1;
@@ -325,7 +484,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			}
 
 			// CAN ID receive #1 (0x7b1)
-			else if(Rx_Header.ExtId == (0x0B0<<20|UNIQUE_Code)){
+			if(Rx_Header.ExtId == (0x0B0<<20|UNIQUE_Code)){
 				Communication_BMS_Flag = 1;
 				//send = 3;
 				Batt_voltage.m_bytes[0] = Rx_data[0];
@@ -382,8 +541,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				discharge_state = (Rx_data[7]<<5)&0x01;
 				sleep_state = (Rx_data[7]<<6)&0x01;
 
+				BPack_byte6 = Rx_data[6];
+				BPack_byte7 = Rx_data[7];
+
 				BPack_Capacity = Batt_capacity.m_uint16t/100;
 				BPack_SOH = Batt_SOH.m_uint16t;
+				BPack_cycle = Batt_cycle.m_uint16t;
 			}
 
 
@@ -438,6 +601,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 		memset(Rx_data, 0, 8*sizeof(Rx_data[0]));
 	}
 }
+*/
 
 /* USER CODE END 1 */
 

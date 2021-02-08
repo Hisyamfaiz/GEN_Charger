@@ -27,6 +27,8 @@
 #include "math.h"
 #include "tim.h"
 #include "Control_Init.h"
+#include "string.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +57,7 @@ void Eror_CodeCheck(void);
 void Constant_Voltage(void);
 void Constant_Current(void);
 void Fault_Check(void);
+void clear_data_receive(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -82,6 +85,17 @@ extern uint8_t check;
 uint8_t		Time_Ah=0;
 float		SUM_Ah;
 
+//variable receive RS485
+uint8_t indeks_words;
+uint8_t buffer_serial;
+
+char words[100][100];
+char	buffer_RS485[100];
+const char s[5]="," ;
+char *token;
+int 		indeks;
+char 		data_receive[100];
+
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 7.5;	//Setting current protection
 uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
@@ -93,7 +107,7 @@ uint16_t	delay_clearing_overtemp;
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M3 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -487,6 +501,53 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
+  uint8_t kl;
+
+  	if(buffer_serial =='#'){
+  		clear_data_receive();
+  		for(kl=0;kl<=indeks_words;kl++){
+  			memset(words[kl],0,strlen(words[kl]));
+  		}
+  	}
+
+  	if(buffer_serial=='*'){
+		token = strtok(data_receive, s);
+		indeks_words=0;
+		while( token != NULL ) {
+			sprintf(words[indeks_words],"%s", token );
+
+			token = strtok(NULL, s);
+			indeks_words++;
+		}
+
+		if(data_receive[1] == HOLE) { //
+			sprintf(buffer_RS485,"%s,%d,%d,%d,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%d,%d",
+					UPPER_UNIQUE_Code,
+					Eror_Code,
+					Handshaking,
+					Ready_toCharge,
+					BPack_Voltage,
+					BPack_Current,
+					BPack_SOC,
+					BPack_Temp,
+					BPack_Capacity,
+					BPack_SOH,
+					BPack_cycle,
+					BPack_byte6,
+					BPack_byte7);
+			HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_RS485, strlen(buffer_RS485));
+		}
+
+		else if(data_receive[1] == 9) { //
+			if(strcmp(words[HOLE],"01") == 0){
+				Charger_Mode = 1;
+			}
+		}
+
+  	}
+  	data_receive[indeks]=buffer_serial;
+  	indeks++;
+  	HAL_UART_Receive_IT(&huart1,&buffer_serial,1);
 
   /* USER CODE END USART1_IRQn 1 */
 }
@@ -631,6 +692,16 @@ void Fault_Check(void)
 		TripTime_OverCurrent = 0;
 		Count_TripTime -= 0.001;
 	}
+}
+
+void clear_data_receive(void)
+{
+	int i;
+	for(i=indeks;i>=0;i--)
+	{
+		data_receive[i]=0;
+	}
+	indeks=0;
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

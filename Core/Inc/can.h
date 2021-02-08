@@ -1,12 +1,12 @@
 /**
   ******************************************************************************
-  * File Name          : CAN.h
-  * Description        : This file provides code for the configuration
-  *                      of the CAN instances.
+  * @file    can.h
+  * @brief   This file contains all the function prototypes for
+  *          the can.c file
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -17,10 +17,11 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __can_H
-#define __can_H
+#ifndef __CAN_H__
+#define __CAN_H__
+
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -49,7 +50,11 @@ float	BPack_Temp,
 		BPack_Voltage,
 		BPack_Current,
 		BPack_SOH,
-		BPack_SOC;
+		BPack_SOC,
+		BPack_cycle;
+
+uint8_t BPack_byte6,
+		BPack_byte7;
 
 union 	uint16t_byte {
 		uint16_t m_uint16t;
@@ -69,14 +74,7 @@ union uint16t_byte 	Batt_voltage,
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ can_H */
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /* __CAN_H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
