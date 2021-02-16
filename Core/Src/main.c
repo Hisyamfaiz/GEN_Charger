@@ -94,7 +94,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -128,6 +128,7 @@ int main(void)
   Eror_Code = 0;
   CHARGER_ON_Init();
   reset=0;
+  send = 1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -150,15 +151,45 @@ int main(void)
 	  else						Display_StanbyMode();
 
 	  if(flag_charge == 1 && Charger_Mode == 0){	// Deteksi perubahan state dari charge ke standby
-		  if(flag_FullCharge == 1) send=6;
-		  if(flag_ForceSwap == 1) send=5;
+		  Ready_toHandshake = 0;					// Variable bantu untuk delay handshaking
+		  if(flag_FullCharge == 1) {
+			  send = 1;
+			  oke = 2;
+			  if(BPack_SOC < 85){
+				  send = 2;	//send data to activate the mosfet
+				  Ready_toCharge = 1;
+				  Handshake_Recognition = 1;
+				  flag_FullCharge = 0;
+			  }
+		  }
+		  if(flag_ForceSwap == 1) {
+			  send = 1;
+			  Handshake_Recognition = 0;
+			  Ready_toCharge = 0;
 
-		  Ready_Handshaking = 0;					// Variable bantu untuk delay handshaking
-		  Delay_ForceSWAP += 1;
-		  if(Delay_ForceSWAP >= 300){
-			  Ready_Handshaking = 1;
-			  flag_charge = 0;
-			  Delay_ForceSWAP = 0;
+			  Delay_ForceSWAP += 1;
+			  if(Delay_ForceSWAP >= 300){
+					Eror_Code = 0;
+					Handshake_Recognition = 0;
+					Ready_toCharge = 0;
+					BPack_Voltage = 0;
+					BPack_Current = 0;
+					BPack_SOC = 0;
+					BPack_Temp = 0;
+					BPack_Capacity = 0;
+					BPack_SOH = 0;
+					BPack_cycle = 0;
+					BPack_byte6 = 0;
+					BPack_byte7 = 0;
+				  UNIQUE_Code = 0;
+				  Ready_toHandshake = 1;
+				  flag_charge = 0;
+				  Delay_ForceSWAP = 0;
+				  LastCharger_Mode = 0;
+				  flag_ForceSwap = 0;
+				  flag_FullCharge = 0;
+
+			  }
 		  }
 	  }
 
@@ -227,22 +258,22 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 void CHARGER_ON_Init(void)
 {
 	HAL_GPIO_WritePin(GPIOC, Buzzer_Pin,1);
-	HAL_GPIO_WritePin(GPIOC, Led3_Pin,1);
+//	HAL_GPIO_WritePin(GPIOC, Led3_Pin,1);
 	HAL_Delay(300);
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
-	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
+//	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
 	HAL_Delay(300);
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
-	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
+//	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
 	HAL_Delay(100);
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
-	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
+//	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
 	HAL_Delay(100);
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
-	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
+//	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
 	HAL_Delay(100);
 	HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
-	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
+//	HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
 	HAL_Delay(100);
 
 	SSD1306_Init();
@@ -259,7 +290,7 @@ void CHARGER_ON_Init(void)
 	SSD1306_UpdateScreen(); //display
 	SSD1306_Fill (0);
 
-	Ready_Handshaking = 1;
+	Ready_toHandshake = 1;
 	HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_Base_Start_IT(&htim2);
@@ -277,9 +308,9 @@ void Display_StanbyMode(void){
 	SSD1306_UpdateScreen(); //display
 	HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
 
-	sprintf(buffer_i2c," RS485 TEST %4.3f,%4.2f,%4.2f,%4.2f,%4.0f \r\n", duty, Voltage_Charger, Current_Charger, BPack_SOC, Ah_CONSUMPTION);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
-	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
+//	sprintf(buffer_i2c," RS485 TEST ");
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_i2c, strlen(buffer_i2c));
 }
 
 void Display_ProtectionMode(void){
@@ -297,7 +328,7 @@ void Display_ProtectionMode(void){
 void Display_ChargeMode(void){
 	SSD1306_Fill (0);
 
-	sprintf(buffer_i2c, "HOLE-%d :",HOLE);
+	sprintf(buffer_i2c, "HOLE-%d : ",HOLE);
 	SSD1306_GotoXY (3,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
@@ -305,10 +336,10 @@ void Display_ChargeMode(void){
 	else if(flag_CHARGE_MODE == 1) sprintf(buffer_i2c, "(CV)");
 	else sprintf(buffer_i2c, "(-)");
 
-	SSD1306_GotoXY (95,0);
+	SSD1306_GotoXY (97,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 
-	sprintf(buffer_i2c, "%s", UPPER_UNIQUE_Code);
+	sprintf(buffer_i2c, "%05s", UPPER_UNIQUE_Code);
 	SSD1306_GotoXY (60,0);
 	SSD1306_Puts (buffer_i2c, &Font_7x10, 1);
 

@@ -75,7 +75,7 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 /* USER CODE BEGIN EV */
 
-uint8_t		i, Temp_delay_calc, L=0, SS=0;
+uint8_t		i, Temp_delay_calc, beepbuzz=0, SS=0;
 uint16_t	Tbuzz=999;
 float		OFFSET_CurrentSense;
 float		TripTime_OverCurrent,
@@ -89,7 +89,7 @@ float		SUM_Ah;
 uint8_t indeks_words;
 uint8_t buffer_serial;
 
-char words[100][100];
+char	words[10][10];
 char	buffer_RS485[100];
 const char s[5]="," ;
 char *token;
@@ -342,51 +342,35 @@ void TIM2_IRQHandler(void)
 		}
 
 		if(BPack_SOC>=100 || (Current_Charger < (0.02*BPack_Capacity) && flag_CHARGE_MODE == 1)) {
-//			check=15;
-			LAST_UNIQUE_Code = UNIQUE_Code;
-			send = 6;
+			send = 1;
 			duty=0;
-			LastCharger_Mode = 0;
 			Charger_Mode = 0;
-			Ready_toCharge = 0;
+			//Ready_toCharge = 0;
 			flag_FullCharge = 1;
-			BPack_SOC=0;
-//			Handshaking = 0;
-//			UNIQUE_Code = 0;
-//			identified = 0;
-//			flag_Check_SOCawal = 0;
 		}
-		L=0; Tbuzz=999;
+		Tbuzz=999;
 	}
 
 	if(Charger_Mode == 0){	//standby mode
 		duty=0;
 		dc=0;
 		htim1.Instance->CCR1=duty*TIM1->ARR;
-//		Clear_ProtectionFlag();
-//		Eror_Code = 0;
 		Ah_CONSUMPTION = 0;
 		OFFSET_CurrentSense = OFFSET_Calibration;
+		beepbuzz=0;
 
 	}
 
 	if(Charger_Mode == 2){	//Protection mode
 		Tbuzz=Tbuzz+1;
-		if (Tbuzz==1000 && L<=5){
+		if (Tbuzz==1000 && beepbuzz<=5){
 			HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
 			HAL_GPIO_TogglePin(GPIOB, Led1_Pin);
-			Tbuzz=0; L+=1;
+			Tbuzz=0; beepbuzz+=1;
 		}
 
-//		if (HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1){
-//			HAL_GPIO_TogglePin(GPIOC, Led3_Pin);
-//			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, 0);
-//			Clear_ProtectionFlag();
-//			dc=0; Charger_Mode =1;
-//		}
-
 		//Clearing Charger Over Temperature
-		if (Flag_ChargerOverTemperature == 1 && Temp_T1<=(SetProtection_Temp1-10) && Temp_T2<=(SetProtection_Temp2-10) && L>5){
+		if (Flag_ChargerOverTemperature == 1 && Temp_T1<=(SetProtection_Temp1-10) && Temp_T2<=(SetProtection_Temp2-10) && beepbuzz>5){
 			Flag_ChargerOverTemperature = 0;
 			flag_CHARGE_MODE = 0;
 			dc=0; Charger_Mode =1;
@@ -442,11 +426,9 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-
-//	if(!(Handshaking == 0 && identified == 1) ) CAN_Tx_Process();
 	CAN_Tx_Process();
 
-	if(Handshaking == 1){
+	if(Handshake_Recognition == 1){
 		SS+=1;
 		if(SS >= 50){
 			if(Communication_BMS_Flag == 1) Communication_BMS_Flag = 0;
@@ -511,20 +493,13 @@ void USART1_IRQHandler(void)
   	}
 
   	if(buffer_serial=='*'){
-		token = strtok(data_receive, s);
-		indeks_words=0;
-		while( token != NULL ) {
-			sprintf(words[indeks_words],"%s", token );
 
-			token = strtok(NULL, s);
-			indeks_words++;
-		}
-
-		if(data_receive[1] == HOLE) { //
-			sprintf(buffer_RS485,"%s,%d,%d,%d,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%5.2f,%d,%d",
-					UPPER_UNIQUE_Code,
+		if((data_receive[1]-48) == HOLE) { //
+			sprintf(buffer_RS485,"#%d;%ld;%d;%d;%d;%5.2f;%5.2f;%5.2f;%5.2f;%5.2f;%5.2f;%5.2f;%d;%d* \r\n",
+					HOLE,
+					UNIQUE_Code,
 					Eror_Code,
-					Handshaking,
+					Handshake_Recognition,
 					Ready_toCharge,
 					BPack_Voltage,
 					BPack_Current,
@@ -535,12 +510,35 @@ void USART1_IRQHandler(void)
 					BPack_cycle,
 					BPack_byte6,
 					BPack_byte7);
-			HAL_UART_Transmit_IT(&huart1, (uint8_t *)buffer_RS485, strlen(buffer_RS485));
+
+			check++;
+			if(Handshake_Recognition == 1 || BPack_SOC >= 100){
+				HAL_GPIO_WritePin(GPIOC, RS485_EN_Pin, 1);
+				HAL_UART_Transmit(&huart1, (uint8_t *)buffer_RS485, strlen(buffer_RS485), 10*strlen(buffer_RS485));
+				HAL_GPIO_WritePin(GPIOC, RS485_EN_Pin, 0);
+			}
 		}
 
-		else if(data_receive[1] == 9) { //
-			if(strcmp(words[HOLE],"01") == 0){
+		else if(data_receive[1]-48 == 9) { //
+			check--;
+//			token = strtok(data_receive, s);
+//			indeks_words=0;
+//			while( token != NULL ) {
+//				sprintf(words[indeks_words],"%s", token );
+//
+//				token = strtok(NULL, s);
+//				indeks_words++;
+//			}
+			if(data_receive[HOLE+1]-48 == 1 && Ready_toCharge == 1 && flag_FullCharge != 1) {
 				Charger_Mode = 1;
+				LastCharger_Mode = 1;
+			}
+
+			if(data_receive[HOLE+1]-48 == 0) {
+				Charger_Mode = 0;
+				Clear_ProtectionFlag();
+				if((LastCharger_Mode == 1) && (Charger_Mode == 0) )
+					flag_ForceSwap = 1;
 			}
 		}
 

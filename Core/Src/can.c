@@ -35,7 +35,7 @@ uint8_t		Rx_data[8];
 uint16_t	Wakeup_BPack_Delay=0;
 int			Delay_Charger=0,
 			Delay_SWAP=0;
-uint8_t		check;
+uint16_t	check;
 
 /* USER CODE END 0 */
 
@@ -89,7 +89,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* CAN1 interrupt Init */
-    HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
@@ -150,15 +150,13 @@ void CAN_Setting(void)
 	Tx_Header.TransmitGlobalTime = DISABLE;
 	Tx_Header.RTR = CAN_RTR_DATA;
 	Tx_Header.IDE = CAN_ID_STD;
-
-
 }
 
 void CAN_Tx_Process(void)
 {
 	if(send == 1){	//wakeup the battery, but mosfet still open
 		Tx_Header.IDE = CAN_ID_EXT;
-		Tx_Header.StdId = 0x0E300000;
+		Tx_Header.ExtId = 0x0E300000;
 		Tx_data[0] = 0x9C;
 		Tx_data[1] = 0x18;
 		Tx_data[2] = 0xf4;
@@ -173,7 +171,7 @@ void CAN_Tx_Process(void)
 	}
 	else if(send == 2){	//close the mosfet, start charge
 		Tx_Header.IDE = CAN_ID_EXT;
-		Tx_Header.StdId = 0x0E300000;
+		Tx_Header.ExtId = 0x0E300000;
 		Tx_data[0] = 0x9C;
 		Tx_data[1] = 0x18;
 		Tx_data[2] = 0xf4;
@@ -272,27 +270,27 @@ void CAN_Tx_Process(void)
 	}
 }*/
 
-// HAL_GPIO_ReadPin(GPIOC, Button2_Pin)==1)
-
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data) == HAL_OK) {
 		HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 
-		if(Rx_Header.StdId == 0xBB){
+		if(Rx_Header.StdId == 0x0BB){
 			if((Rx_data[2] & Rx_data[3]) == 0x40){
-				if(BPack_SOC < 85){
+				if(Ready_toHandshake == 1){
 					send = 2;	//send data to activate the mosfet
 				}
 			}
 
-			else if((Rx_data[2] & Rx_data[3]) == 0x43){
+			else if(((Rx_data[2] & Rx_data[3]) == 0x43)){
+				Handshake_Recognition = 1;
 				Ready_toCharge = 1;
 			}
 		}
 
 		// CAN ID receive #1 (0x7b1)
-		else if(Rx_Header.ExtId == (0x0B0<<20)){
+		else if((Rx_Header.ExtId & 0xFFF00000) == 0x0B000000) {
 			UNIQUE_Code = Rx_Header.ExtId & 0x000FFFFF;
+			//UNIQUE_Code = 0xABCD1;
 			itoa(UNIQUE_Code, lower_UNIQUE_Code, 16);
 			int ii=0;
 			while(ii<6){
@@ -310,15 +308,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			Batt_temp.m_bytes[0] = Rx_data[6];
 			Batt_temp.m_bytes[1] = Rx_data[7];
 
-			BPack_Temp = (Batt_temp.m_uint16t/10)-40;
+			BPack_Temp = (Batt_temp.m_uint16t-40);
 			BPack_Voltage = Batt_voltage.m_uint16t/100;
-			BPack_SOC = (float)Batt_SOC.m_uint16t/100;
-			BPack_Current = (Batt_current.m_uint16t/100)-50;
+			BPack_SOC = (float)Batt_SOC.m_uint16t;
+			BPack_Current = (Batt_current.m_uint16t/100);
 
 		}
 
-		// CAN ID receive #2 (0x7b2)
-		else if(Rx_Header.ExtId == (0x0B1<<20)){
+		// CAN ID receive #2 (0x7b1)
+		else if((Rx_Header.ExtId & 0xFFF00000) == 0x0B100000) {
 			Communication_BMS_Flag = 1;
 			Batt_capacity.m_bytes[0] = Rx_data[0];
 			Batt_capacity.m_bytes[1] = Rx_data[1];
@@ -346,57 +344,86 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			BPack_byte6 = Rx_data[6];
 			BPack_byte7 = Rx_data[7];
 
-			BPack_Capacity = Batt_capacity.m_uint16t/100;
+			BPack_Capacity = Batt_capacity.m_uint16t/10;
 			BPack_SOH = Batt_SOH.m_uint16t;
 			BPack_cycle = Batt_cycle.m_uint16t;
 		}
 
 
 		// *********************** Start Cell  Voltage Data Send ******************************
-		else if(Rx_Header.ExtId == (0x0B4<<20|UNIQUE_Code)){
-			vcell_15databyte[0].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[0].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[1].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[1].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[2].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[2].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[3].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[3].m_bytes[0] = Rx_data[7];
+		else if(Rx_Header.StdId == 0x0B4){
+			vcell_15databyte[0].m_bytes[0] = Rx_data[0];
+			vcell_15databyte[0].m_bytes[1] = Rx_data[1];
+			vcell_15databyte[1].m_bytes[0] = Rx_data[2];
+			vcell_15databyte[1].m_bytes[1] = Rx_data[3];
+			vcell_15databyte[2].m_bytes[0] = Rx_data[4];
+			vcell_15databyte[2].m_bytes[1] = Rx_data[5];
+			vcell_15databyte[3].m_bytes[0] = Rx_data[6];
+			vcell_15databyte[3].m_bytes[1] = Rx_data[7];
+
+			vcell_1 = (float)vcell_15databyte[0].m_uint16t/1000;
+			vcell_2 = (float)vcell_15databyte[1].m_uint16t/1000;
+			vcell_3 = (float)vcell_15databyte[2].m_uint16t/1000;
+			vcell_4 = (float)vcell_15databyte[3].m_uint16t/1000;
 		}
 
-		else if(Rx_Header.ExtId == (0x0B5<<20|UNIQUE_Code)){
-			vcell_15databyte[4].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[4].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[5].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[5].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[6].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[6].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[7].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[7].m_bytes[0] = Rx_data[7];
+		else if(Rx_Header.StdId == 0x0B5){
+			vcell_15databyte[4].m_bytes[0] = Rx_data[0];
+			vcell_15databyte[4].m_bytes[1] = Rx_data[1];
+			vcell_15databyte[5].m_bytes[0] = Rx_data[2];
+			vcell_15databyte[5].m_bytes[1] = Rx_data[3];
+			vcell_15databyte[6].m_bytes[0] = Rx_data[4];
+			vcell_15databyte[6].m_bytes[1] = Rx_data[5];
+			vcell_15databyte[7].m_bytes[0] = Rx_data[6];
+			vcell_15databyte[7].m_bytes[1] = Rx_data[7];
+
+			vcell_5 = (float)vcell_15databyte[4].m_uint16t/1000;
+			vcell_6 = (float)vcell_15databyte[5].m_uint16t/1000;
+			vcell_7 = (float)vcell_15databyte[6].m_uint16t/1000;
+			vcell_8 = (float)vcell_15databyte[7].m_uint16t/1000;
 		}
 
-		else if(Rx_Header.ExtId == (0x0B6<<20|UNIQUE_Code)){
-			vcell_15databyte[8].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[8].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[9].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[9].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[10].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[10].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[11].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[11].m_bytes[0] = Rx_data[7];
+		else if(Rx_Header.StdId == 0x0B6){
+			vcell_15databyte[8].m_bytes[0] = Rx_data[0];
+			vcell_15databyte[8].m_bytes[1] = Rx_data[1];
+			vcell_15databyte[9].m_bytes[0] = Rx_data[2];
+			vcell_15databyte[9].m_bytes[1] = Rx_data[3];
+			vcell_15databyte[10].m_bytes[0] = Rx_data[4];
+			vcell_15databyte[10].m_bytes[1] = Rx_data[5];
+			vcell_15databyte[11].m_bytes[0] = Rx_data[6];
+			vcell_15databyte[11].m_bytes[1] = Rx_data[7];
+
+			vcell_9 = (float)vcell_15databyte[8].m_uint16t/1000;
+			vcell_10 = (float)vcell_15databyte[9].m_uint16t/1000;
+			vcell_11 = (float)vcell_15databyte[10].m_uint16t/1000;
+			vcell_12 = (float)vcell_15databyte[11].m_uint16t/1000;
 		}
 
-		else if(Rx_Header.ExtId == (0x0B7<<20|UNIQUE_Code)){
-			vcell_15databyte[12].m_bytes[1] = Rx_data[0];
-			vcell_15databyte[12].m_bytes[0] = Rx_data[1];
-			vcell_15databyte[13].m_bytes[1] = Rx_data[2];
-			vcell_15databyte[13].m_bytes[0] = Rx_data[3];
-			vcell_15databyte[14].m_bytes[1] = Rx_data[4];
-			vcell_15databyte[14].m_bytes[0] = Rx_data[5];
-			vcell_15databyte[15].m_bytes[1] = Rx_data[6];
-			vcell_15databyte[15].m_bytes[0] = Rx_data[7];
+		else if(Rx_Header.StdId == 0x0B7){
+			vcell_15databyte[12].m_bytes[0] = Rx_data[0];
+			vcell_15databyte[12].m_bytes[1] = Rx_data[1];
+			vcell_15databyte[13].m_bytes[0] = Rx_data[2];
+			vcell_15databyte[13].m_bytes[1] = Rx_data[3];
+			vcell_15databyte[14].m_bytes[0] = Rx_data[4];
+			vcell_15databyte[14].m_bytes[1] = Rx_data[5];
+			vcell_15databyte[15].m_bytes[0] = Rx_data[6];
+			vcell_15databyte[15].m_bytes[1] = Rx_data[7];
+
+			vcell_13 = (float)vcell_15databyte[12].m_uint16t/1000;
+			vcell_14 = (float)vcell_15databyte[13].m_uint16t/1000;
+			vcell_15 = (float)vcell_15databyte[14].m_uint16t/1000;
 		}
 			// ******************************End Cell  Voltage Data Send**************************************
+		else if(Rx_Header.StdId == 0x0BA){
+			Bpack_maxvoltage.m_bytes[0] = Rx_data[0];
+			Bpack_maxvoltage.m_bytes[1] = Rx_data[1];
+			Bpack_maxchargecurrent.m_bytes[0] = Rx_data[0];
+			Bpack_maxchargecurrent.m_bytes[1] = Rx_data[1];
+			Bpack_maxdischargecurrent.m_bytes[0] = Rx_data[0];
+			Bpack_maxdischargecurrent.m_bytes[1] = Rx_data[1];
+			Bpack_maxtemp.m_bytes[0] = Rx_data[0];
+			Bpack_maxtemp.m_bytes[1] = Rx_data[1];
+		}
 	Rx_Header.ExtId = 0;
 	Rx_Header.StdId = 0;
 	memset(Rx_data, 0, 8*sizeof(Rx_data[0]));

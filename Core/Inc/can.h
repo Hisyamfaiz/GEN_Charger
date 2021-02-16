@@ -53,6 +53,22 @@ float	BPack_Temp,
 		BPack_SOC,
 		BPack_cycle;
 
+float	vcell_1,
+		vcell_2,
+		vcell_3,
+		vcell_4,
+		vcell_5,
+		vcell_6,
+		vcell_7,
+		vcell_8,
+		vcell_9,
+		vcell_10,
+		vcell_11,
+		vcell_12,
+		vcell_13,
+		vcell_14,
+		vcell_15;
+
 uint8_t BPack_byte6,
 		BPack_byte7;
 
@@ -67,7 +83,11 @@ union uint16t_byte 	Batt_voltage,
 					Batt_capacity,
 					Batt_cycle,
 					Batt_SOH,
-					vcell_15databyte[15];
+					vcell_15databyte[15],
+					Bpack_maxvoltage,
+					Bpack_maxchargecurrent,
+					Bpack_maxdischargecurrent,
+					Bpack_maxtemp;
 
 /* USER CODE END Prototypes */
 

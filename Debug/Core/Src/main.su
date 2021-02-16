@@ -1,8 +1,8 @@
 main.c:88:5:main	8	static
-main.c:174:6:SystemClock_Config	80	static
-main.c:212:6:HAL_ADC_ConvCpltCallback	16	static
-main.c:227:6:CHARGER_ON_Init	8	static
-main.c:273:6:Display_StanbyMode	72	static
-main.c:285:6:Display_ProtectionMode	8	static
-main.c:297:6:Display_ChargeMode	80	static
-main.c:361:6:Error_Handler	4	static
+main.c:205:6:SystemClock_Config	80	static
+main.c:243:6:HAL_ADC_ConvCpltCallback	16	static
+main.c:258:6:CHARGER_ON_Init	8	static
+main.c:304:6:Display_StanbyMode	8	static
+main.c:316:6:Display_ProtectionMode	8	static
+main.c:328:6:Display_ChargeMode	80	static
+main.c:392:6:Error_Handler	4	static

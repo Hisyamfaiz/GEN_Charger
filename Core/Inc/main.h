@@ -55,7 +55,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 #define MAX_CHARGE_VOLTAGE 62.3
-#define HOLE 6
+#define HOLE 3
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -65,8 +65,8 @@ void Error_Handler(void);
 #define Led2_GPIO_Port GPIOB
 #define Led3_Pin GPIO_PIN_6
 #define Led3_GPIO_Port GPIOC
-#define Button2_Pin GPIO_PIN_7
-#define Button2_GPIO_Port GPIOC
+#define RS485_EN_Pin GPIO_PIN_7
+#define RS485_EN_GPIO_Port GPIOC
 #define Buzzer_Pin GPIO_PIN_8
 #define Buzzer_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
@@ -128,7 +128,7 @@ float 		duty;
 
 uint8_t		Charger_Mode,
 			LastCharger_Mode,
-			Ready_Handshaking,
+			Ready_toHandshake,
 			flag_charge;
 
 uint8_t		Flag_ChargerOverVoltage,
@@ -162,7 +162,7 @@ uint8_t		charge_state,
 			sleep_state,
 			Communication_BMS_Flag,
 			Communication_MiniPC_Flag,
-			Handshaking,
+			Handshake_Recognition,
 			identified,
 			Start_Charge,
 			reset,
