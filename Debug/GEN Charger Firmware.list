@@ -1768,7 +1768,7 @@ void Constant_Current()
  80014b4:	4602      	mov	r2, r0
  80014b6:	4b0d      	ldr	r3, [pc, #52]	; (80014ec <Constant_Current+0x5c>)
  80014b8:	601a      	str	r2, [r3, #0]
-//	CC_Value = 3;
+//	CC_Value = 3; test
 	if(flag_Derating==1)
  80014ba:	4b0d      	ldr	r3, [pc, #52]	; (80014f0 <Constant_Current+0x60>)
  80014bc:	781b      	ldrb	r3, [r3, #0]

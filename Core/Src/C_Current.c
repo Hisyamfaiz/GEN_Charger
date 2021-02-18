@@ -20,7 +20,7 @@ float	CC_Value;
 void Constant_Current()
 {
 	CC_Value = 0.2*BPack_Capacity;
-//	CC_Value = 3;
+//	CC_Value = 3; test
 	if(flag_Derating==1)
 		SetPoint_CC = 0.5*CC_Value;
 	else {
