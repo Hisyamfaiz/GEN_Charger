@@ -308,10 +308,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			Batt_temp.m_bytes[0] = Rx_data[6];
 			Batt_temp.m_bytes[1] = Rx_data[7];
 
-			BPack_Temp = (Batt_temp.m_uint16t-40);
-			BPack_Voltage = Batt_voltage.m_uint16t/100;
+			BPack_Temp = (float)(Batt_temp.m_uint16t-40);
+			BPack_Voltage = (float)Batt_voltage.m_uint16t/100;
 			BPack_SOC = (float)Batt_SOC.m_uint16t;
-			BPack_Current = (Batt_current.m_uint16t/100);
+			BPack_Current = (float)Batt_current.m_uint16t/10;
 
 		}
 

@@ -97,7 +97,7 @@ int 		indeks;
 char 		data_receive[100];
 
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
-uint8_t		SetProtection_OverCurrent = 7.5;	//Setting current protection
+uint8_t		SetProtection_OverCurrent = 9;	//Setting current protection
 uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
 uint8_t		SetProtection_Temp2 = 65; 	//Setting inductor Temperature protection
 uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection

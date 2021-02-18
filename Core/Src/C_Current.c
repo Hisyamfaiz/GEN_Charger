@@ -19,7 +19,8 @@ float	CC_Value;
 //test git2
 void Constant_Current()
 {
-	CC_Value = 0.3*BPack_Capacity;
+	CC_Value = 0.2*BPack_Capacity;
+//	CC_Value = 3;
 	if(flag_Derating==1)
 		SetPoint_CC = 0.5*CC_Value;
 	else {
