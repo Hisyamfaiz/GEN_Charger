@@ -87,7 +87,9 @@ union uint16t_byte 	Batt_voltage,
 					Bpack_maxvoltage,
 					Bpack_maxchargecurrent,
 					Bpack_maxdischargecurrent,
-					Bpack_maxtemp;
+					Bpack_maxtemp,
+					maxcharge_voltage,
+					maxcharge_current;
 
 /* USER CODE END Prototypes */
 

@@ -315,6 +315,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 		}
 
+		// CAN ID receive #1 (0x7b1)
+		else if((Rx_Header.ExtId & 0xFFF00000) == 0x0E000000) {
+			maxcharge_voltage.m_bytes[0] = Rx_data[0];
+			maxcharge_voltage.m_bytes[1] = Rx_data[1];
+			maxcharge_current.m_bytes[0] = Rx_data[2];
+			maxcharge_current.m_bytes[1] = Rx_data[3];
+
+		}
+
 		// CAN ID receive #2 (0x7b1)
 		else if((Rx_Header.ExtId & 0xFFF00000) == 0x0B100000) {
 			Communication_BMS_Flag = 1;

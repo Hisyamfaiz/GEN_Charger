@@ -30,13 +30,13 @@ void Constant_Current()
 		if(BPack_Temp >10 && BPack_Temp < 20) // Temperature 10 ~ 20
 			SetPoint_CC = 0.5*CC_Value;
 
-		if(BPack_Temp >= 20 && BPack_Temp < 30) // Temperature 20 ~ 30
+		if(BPack_Temp >= 20 && BPack_Temp < 25) // Temperature 20 ~ 30
 			SetPoint_CC = 0.7*CC_Value;
 
-		if(BPack_Temp >= 30 && BPack_Temp <= 60)
+		if(BPack_Temp >= 25 && BPack_Temp <= 50)
 			SetPoint_CC = CC_Value;
 
-		if(BPack_Temp > 72)
+		if(BPack_Temp > 52)
 			SetPoint_CC = 0.5*CC_Value;
 	}
 

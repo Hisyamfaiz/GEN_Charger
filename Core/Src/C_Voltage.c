@@ -25,92 +25,92 @@ void Constant_Voltage(void)
 
 	///////////////////////////fuzzifikasi error//////////////////////////////
 
-	if(e<=-75)
-	{ eNB=1;  eNM=eNS=eZ=ePS=ePM=ePB=0;}
+		if(e<=-9)
+		{ eNB=1;  eNM=eNS=eZ=ePS=ePM=ePB=0;}
 
-	if(e>=-75&&e<=-50)
-	{ eNB=(-(e+75)/25)+1;
-	   eNM=(e+75)/25;
-	   eNS=eZ=ePS=ePM=ePB=0;
-	}
+		if(e>=-9&&e<=-6)
+		{ eNB=(-(e+9)/3)+1;
+		   eNM=(e+9)/3;
+		   eNS=eZ=ePS=ePM=ePB=0;
+		}
 
-	else if(e>=-50&&e<=-25)
-	{ eNM=(-(e+50)/25)+1;
-	   eNS=(e+50)/25;
-	   eNB=eZ=ePS=ePM=ePB=0;
-	}
+		else if(e>=-6&&e<=-3)
+		{ eNM=(-(e+6)/3)+1;
+		   eNS=(e+6)/3;
+		   eNB=eZ=ePS=ePM=ePB=0;
+		}
 
-	else if(e>=-25&&e<=0)
-	{ eNS=(-(e+25)/25)+1;
-	   eZ=(e/25)+1;
-	   eNB=eNM=ePS=ePM=ePB=0;
-	}
+		else if(e>=-3&&e<=0)
+		{ eNS=(-(e+3)/3)+1;
+		   eZ=(e/3)+1;
+		   eNB=eNM=ePS=ePM=ePB=0;
+		}
 
-	else if(e>=0&&e<=25)
-	{ eZ=-(e/25)+1;
-	   ePS=e/25;
-	   eNB=eNM=eNS=ePM=ePB=0;
-	}
+		else if(e>=0&&e<=3)
+		{ eZ=-(e/3)+1;
+		   ePS=e/3;
+		   eNB=eNM=eNS=ePM=ePB=0;
+		}
 
-	else if(e>=25&&e<=50)
-	{ ePS=(-(e-25)/25)+1;
-	   ePM=(e-25)/25;
-	   eNB=eNM=eNS=eZ=ePB=0;
-	}
+		else if(e>=3&&e<=6)
+		{ ePS=(-(e-3)/3)+1;
+		   ePM=(e-3)/3;
+		   eNB=eNM=eNS=eZ=ePB=0;
+		}
 
-	else if(e>=50&&e<=75)
-	{ ePM=(-(e-50)/25)+1;
-	   ePB=(e-50)/25;
-	   eNB=eNM=eNS=eZ=ePS=0;
-	}
+		else if(e>=6&&e<=9)
+		{ ePM=(-(e-6)/3)+1;
+		   ePB=(e-6)/3;
+		   eNB=eNM=eNS=eZ=ePS=0;
+		}
 
-	else if(e>=75)
-	{ ePB=1; eNB=eNM=eNS=eZ=ePS=ePM=0;}
+		else if(e>=9)
+		{ ePB=1; eNB=eNM=eNS=eZ=ePS=ePM=0;}
 
-	/////////////////////fuzzifikasi delta error //////////////
-	if(d<=-30)
-	{ dNB=1;  dNM=dNS=dZ=dPS=dPM=dPB=0;}
+		/////////////////////fuzzifikasi delta error //////////////
+		if(d<=-9)
+		{ dNB=1;  dNM=dNS=dZ=dPS=dPM=dPB=0;}
 
-	if(d>=-30&&d<=-20)
-	{ dNB=(-(d+30)/10)+1;
-	   dNM=(d+30)/10;
-	   dNS=dZ=dPS=dPM=dPB=0;
-	}
+		if(d>=-9&&d<=-6)
+		{ dNB=(-(d+9)/3)+1;
+		   dNM=(d+9)/3;
+		   dNS=dZ=dPS=dPM=dPB=0;
+		}
 
-	else if(d>=-20&&d<=-10)
-	{ dNM=(-(d+20)/10)+1;
-	   dNS=(d+20)/10;
-	   dNB=dZ=dPS=dPM=dPB=0;
-	}
+		else if(d>=-6&&d<=-3)
+		{ dNM=(-(d+6)/3)+1;
+		   dNS=(d+6)/3;
+		   dNB=dZ=dPS=dPM=dPB=0;
+		}
 
-	else if(d>=-10&&d<=0)
-	{ dNS=(-(d+10)/10)+1;
-	   dZ=(d+10)/10;
-	   dNB=dNM=dPS=dPM=dPB=0;
-	}
+		else if(d>=-3&&d<=0)
+		{ dNS=(-(d+3)/3)+1;
+		   dZ=(d+3)/3;
+		   dNB=dNM=dPS=dPM=dPB=0;
+		}
 
-	else if(d>=0&&d<=10)
-	{ dZ=-(d/10)+1;
-	   dPS=d/10;
-	   dNB=dNM=dNS=dPM=dPB=0;
-	}
+		else if(d>=0&&d<=3)
+		{ dZ=-(d/3)+1;
+		   dPS=d/3;
+		   dNB=dNM=dNS=dPM=dPB=0;
+		}
 
-	else if(d>=10&&d<=20)
-	{ dPS=(-(d-10)/10)+1;
-	   dPM=(d-10)/10;
-	   dNB=dNM=dNS=dZ=dPB=0;
-	}
+		else if(d>=3&&d<=6)
+		{ dPS=(-(d-3)/3)+1;
+		   dPM=(d-3)/3;
+		   dNB=dNM=dNS=dZ=dPB=0;
+		}
 
-	else if(d>=20&&d<=30)
-	{ dPM=(-(d-20)/10)+1;
-	   dPB=(d-20)/10;
-	   dNB=dNM=dNS=dZ=dPS=0;
-	}
+		else if(d>=6&&d<=9)
+		{ dPM=(-(d-6)/3)+1;
+		   dPB=(d-6)/3;
+		   dNB=dNM=dNS=dZ=dPS=0;
+		}
 
-	else if(d>=30)
-	{ dPB=1; dNB=dNM=dNS=dZ=dPS=dPM=0;}
+		else if(d>=9)
+		{ dPB=1; dNB=dNM=dNS=dZ=dPS=dPM=0;}
 
-	/////////////////////inferensi///////////////////////
+		/////////////////////inferensi///////////////////////
 
 	r1=dPB; if(eNB<dPB) r1=eNB;		//max(dPB,eNB);
 	r2=dPB; if(eNM<dPB) r2=eNM;

@@ -72,7 +72,6 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart3;
 /* USER CODE BEGIN EV */
 
 uint8_t		i, Temp_delay_calc, beepbuzz=0, SS=0;
@@ -98,7 +97,7 @@ char 		data_receive[100];
 
 uint8_t		SetProtection_ShortCircuit = 15;//Setting current protection
 uint8_t		SetProtection_OverCurrent = 9;	//Setting current protection
-uint8_t		SetProtection_OverVoltage = 63;	//Setting voltage protection
+uint8_t		SetProtection_OverVoltage = 65   ;	//Setting voltage protection
 uint8_t		SetProtection_Temp2 = 65; 	//Setting inductor Temperature protection
 uint8_t		SetProtection_Temp1 = 60;	//Setting Mosfet & Diode Temperature protection
 uint16_t	delay_clearing_overtemp;
@@ -548,20 +547,6 @@ void USART1_IRQHandler(void)
   	HAL_UART_Receive_IT(&huart1,&buffer_serial,1);
 
   /* USER CODE END USART1_IRQn 1 */
-}
-
-/**
-  * @brief This function handles USART3 global interrupt.
-  */
-void USART3_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART3_IRQn 0 */
-
-  /* USER CODE END USART3_IRQn 0 */
-  HAL_UART_IRQHandler(&huart3);
-  /* USER CODE BEGIN USART3_IRQn 1 */
-
-  /* USER CODE END USART3_IRQn 1 */
 }
 
 /**
