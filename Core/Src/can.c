@@ -274,14 +274,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &Rx_Header, Rx_data) == HAL_OK) {
 		HAL_GPIO_TogglePin(GPIOB, Led2_Pin);
 
-		if(Rx_Header.StdId == 0x0BB){
-			if((Rx_data[2] & Rx_data[3]) == 0x40){
+		if((Rx_Header.ExtId & 0xFFF00000) == 0x0E000000) {
+			if(Rx_data[6] == 0x55){
 				if(Ready_toHandshake == 1){
 					send = 2;	//send data to activate the mosfet
 				}
 			}
 
-			else if(((Rx_data[2] & Rx_data[3]) == 0x43)){
+			else if(Rx_data[6] == 0xAA){
 				Handshake_Recognition = 1;
 				Ready_toCharge = 1;
 			}
