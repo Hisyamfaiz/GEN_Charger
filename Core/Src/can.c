@@ -156,7 +156,7 @@ void CAN_Tx_Process(void)
 {
 	if(send == 1){	//wakeup the battery, but mosfet still open
 		Tx_Header.IDE = CAN_ID_EXT;
-		Tx_Header.ExtId = 0x0E300000;
+		Tx_Header.ExtId = (0x0E3 << 20) | UNIQUE_Code;
 		Tx_data[0] = 0x9C;
 		Tx_data[1] = 0x18;
 		Tx_data[2] = 0xf4;
@@ -171,7 +171,7 @@ void CAN_Tx_Process(void)
 	}
 	else if(send == 2){	//close the mosfet, start charge
 		Tx_Header.IDE = CAN_ID_EXT;
-		Tx_Header.ExtId = 0x0E300000;
+		Tx_Header.ExtId = (0x0E3 << 20) | UNIQUE_Code;
 		Tx_data[0] = 0x9C;
 		Tx_data[1] = 0x18;
 		Tx_data[2] = 0xf4;

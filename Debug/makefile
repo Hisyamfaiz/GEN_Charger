@@ -54,8 +54,8 @@ all: main-build
 main-build: GEN\ Charger\ Firmware.elf secondary-outputs
 
 # Tool invocations
-GEN\ Charger\ Firmware.elf: $(OBJS) $(USER_OBJS) C:\Users\WIN\ 10\git\GEN_Charger\STM32F205RETX_FLASH.ld
-	arm-none-eabi-gcc -o "GEN Charger Firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\WIN 10\git\GEN_Charger\STM32F205RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GEN Charger Firmware.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+GEN\ Charger\ Firmware.elf: $(OBJS) $(USER_OBJS) C:\Users\Moh\ Hisyam\ Faiz\git\GEN_Charger\STM32F205RETX_FLASH.ld
+	arm-none-eabi-gcc -o "GEN Charger Firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Moh Hisyam Faiz\git\GEN_Charger\STM32F205RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GEN Charger Firmware.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
